@@ -82,6 +82,20 @@ SAMPLE_ORDERS: List[Dict[str, Any]] = [
             }
         ],
     },
+    {
+        "id": 4503,
+        "customer_id": "usr_103",
+        "amount": 4500.00,
+        "status": "delayed_critical",
+        "items": [
+            {
+                "name": "VIP Cossack Banquet",
+                "price": 4500.00,
+                "quantity": 1,
+                "perishable": True,
+            }
+        ],
+    },
 ]
 
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navbar } from './components/Navbar';
-import { ClientChatView } from './components/ClientChatView';
+import { ClientChatView, CUSTOMERS } from './components/ClientChatView';
 import { AdminTracePanel } from './components/AdminTracePanel';
 import { A2AVision } from './components/A2AVision';
 import { MarketingCopilot } from './components/MarketingCopilot';
@@ -8,12 +8,19 @@ import { ChatMessage } from './types';
 
 export function App() {
   const [activeView, setActiveView] = useState<'b2c' | 'admin' | 'a2a' | 'marketing'>('b2c');
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [activeCustomerId, setActiveCustomerId] = useState('usr_101');
+  
+  const getInitialMessage = (customerId: string) => {
+    const customer = CUSTOMERS.find(c => c.id === customerId) || CUSTOMERS[0];
+    const firstName = customer.name.split(' ')[0];
+    return `Good afternoon, ${firstName}. Welcome to Kozatska Ferma Priority Support. How can I assist you with your orders today?`;
+  };
 
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'init-1',
       sender: 'agent',
-      text: 'Good afternoon, Ivan. Welcome to Kozatska Ferma Priority Support. How can I assist you with your orders today?',
+      text: getInitialMessage('usr_101'),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -25,6 +32,18 @@ export function App() {
   const showNotification = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3500);
+  };
+
+  const handleCustomerChange = (customerId: string) => {
+    setActiveCustomerId(customerId);
+    setMessages([
+      {
+        id: `init-${Date.now()}`,
+        sender: 'agent',
+        text: getInitialMessage(customerId),
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ]);
   };
 
   const handleSendMessage = async (text: string) => {
@@ -42,7 +61,7 @@ export function App() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, user_id: 'usr_101' }),
+        body: JSON.stringify({ message: text, user_id: activeCustomerId }),
       });
 
       if (!res.ok) throw new Error(`Server returned status ${res.status}`);
@@ -54,8 +73,8 @@ export function App() {
         text: data.reply,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         orderId: data.order_id,
-        refunded: true,
-        voucher: 'FERMA-RECOVER-20',
+        refunded: data.reply.toLowerCase().includes('refund'),
+        voucher: data.reply.includes('FERMA-RECOVER') ? 'FERMA-RECOVER-20' : undefined,
       };
 
       setMessages((prev) => [...prev, agentMsg]);
@@ -63,10 +82,12 @@ export function App() {
       setTraceTrigger((n) => n + 1);
     } catch (err: any) {
       console.error('Chat error:', err);
+      const customer = CUSTOMERS.find(c => c.id === activeCustomerId) || CUSTOMERS[0];
+      const firstName = customer.name.split(' ')[0];
       const fallbackMsg: ChatMessage = {
         id: `agent-fallback-${Date.now()}`,
         sender: 'agent',
-        text: 'Ivan, I am truly sorry your party was ruined. Freshness is sacred to us, and the delay that compromised your cheese and meat platter is completely unacceptable.\n\nI have immediately refunded your entire order of 2,000 UAH back to your card (Order #4501 is now processed as Refunded). Additionally, I have credited your account with a 20% VIP voucher: **FERMA-RECOVER-20**.\n\nPlease accept our sincere apologies for letting you down today.',
+        text: `${firstName}, I am truly sorry your party was ruined. Freshness is sacred to us, and the delay that compromised your order is completely unacceptable.\n\nI have immediately refunded your entire order back to your card. Additionally, I have credited your account with a 20% VIP voucher: **FERMA-RECOVER-20**.\n\nPlease accept our sincere apologies for letting you down today.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         orderId: 4501,
         refunded: true,
@@ -84,12 +105,12 @@ export function App() {
     try {
       const res = await fetch('/api/reset', { method: 'POST' });
       if (res.ok) {
-        showNotification('Order #4501 status successfully reset to delayed_critical');
+        showNotification('Database successfully reset to delayed_critical');
         setMessages([
           {
             id: `init-${Date.now()}`,
             sender: 'agent',
-            text: 'Good afternoon, Ivan. Welcome to Kozatska Ferma Priority Support. How can I assist you with your orders today?',
+            text: getInitialMessage(activeCustomerId),
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           },
         ]);
@@ -146,6 +167,8 @@ export function App() {
                 onSendMessage={handleSendMessage}
                 isLoading={isLoading}
                 onSwitchToAdmin={() => setActiveView('admin')}
+                activeCustomerId={activeCustomerId}
+                onCustomerChange={handleCustomerChange}
               />
             ) : activeView === 'admin' ? (
               <AdminTracePanel onRefreshTrigger={traceTrigger} />

@@ -247,23 +247,45 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
 
                   {/* HIGHLIGHT THIS: Glowing badge for ML Churn Step (B2C Only) */}
                   {isMLStep && (
-                    <div className="my-5 p-5 rounded-2xl bg-amber-100/50 border border-amber-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                    <div className={`my-5 p-5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm ${
+                      (step.output?.churn_prob || 0.88) > 0.6 
+                        ? 'bg-amber-100/50 border-amber-200' 
+                        : (step.output?.churn_prob || 0) < 0.3 
+                          ? 'bg-emerald-50/50 border-emerald-200' 
+                          : 'bg-yellow-50/50 border-yellow-200'
+                    }`}>
                       <div className="flex items-center space-x-4">
-                        <div className="h-12 w-12 rounded-full bg-brand-terracotta text-white flex items-center justify-center font-bold font-mono text-xl shrink-0 shadow-sm">
-                          88%
+                        <div className={`h-12 w-12 rounded-full text-white flex items-center justify-center font-bold font-mono text-lg shrink-0 shadow-sm ${
+                          (step.output?.churn_prob || 0.88) > 0.6 
+                            ? 'bg-brand-terracotta' 
+                            : (step.output?.churn_prob || 0) < 0.3 
+                              ? 'bg-brand-green' 
+                              : 'bg-yellow-600'
+                        }`}>
+                          {Math.round((step.output?.churn_prob || 0.88) * 100)}%
                         </div>
                         <div>
                           <div className="text-brand-roasted/60 font-sans font-bold text-xs uppercase tracking-wider mb-0.5">
                             ML Model Output &bull; Scikit-Learn Random Forest
                           </div>
                           <div className="text-brand-roasted font-bold text-lg sm:text-xl font-serif">
-                            88% Churn Risk &rarr; Action: RECOVER
+                            {Math.round((step.output?.churn_prob || 0.88) * 100)}% Churn Risk &rarr; Action: {step.output?.action ? step.output.action.substring(0, 15).toUpperCase() : 'RECOVER'}
                           </div>
                         </div>
                       </div>
 
-                      <span className="px-4 py-2 rounded-full bg-brand-terracotta/10 text-brand-terracotta border border-brand-terracotta/20 font-sans font-bold text-xs uppercase tracking-wider shrink-0">
-                        CRITICAL THRESHOLD EXCEEDED
+                      <span className={`px-4 py-2 rounded-full border font-sans font-bold text-xs uppercase tracking-wider shrink-0 ${
+                        (step.output?.churn_prob || 0.88) > 0.6 
+                          ? 'bg-brand-terracotta/10 text-brand-terracotta border-brand-terracotta/20' 
+                          : (step.output?.churn_prob || 0) < 0.3 
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
+                            : 'bg-yellow-100 text-yellow-800 border-yellow-300'
+                      }`}>
+                        {(step.output?.churn_prob || 0.88) > 0.6 
+                          ? 'CRITICAL THRESHOLD EXCEEDED' 
+                          : (step.output?.churn_prob || 0) < 0.3 
+                            ? 'LOW RISK DETECTED' 
+                            : 'VIP STATUS'}
                       </span>
                     </div>
                   )}

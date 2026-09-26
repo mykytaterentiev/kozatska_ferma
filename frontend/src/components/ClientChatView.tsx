@@ -2,11 +2,40 @@ import { useState, useRef, useEffect, FC, FormEvent } from 'react';
 import { Send, AlertTriangle, CheckCircle2, Package, Sparkles, User, Tag } from 'lucide-react';
 import { ChatMessage } from '../types';
 
+export const CUSTOMERS = [
+  {
+    id: 'usr_101',
+    name: 'Ivan Z.',
+    risk: 'High Risk (88%)',
+    ltv: '$15k',
+    scenario: 'Order #4501 • 2,000 UAH',
+    desc: '4 tickets, 20 days inactive. High churn risk.',
+  },
+  {
+    id: 'usr_102',
+    name: 'Olena K.',
+    risk: 'Low Risk (15%)',
+    ltv: '$6.2k',
+    scenario: 'Order #4502 • 850 UAH',
+    desc: '1 ticket, recently active. Low churn risk.',
+  },
+  {
+    id: 'usr_103',
+    name: 'Taras M.',
+    risk: 'VIP (45%)',
+    ltv: '$24k',
+    scenario: 'Order #4503 • 4,500 UAH',
+    desc: 'Highest LTV, VIP status. Prefers instant resolution.',
+  },
+];
+
 interface ClientChatViewProps {
   messages: ChatMessage[];
   onSendMessage: (message: string) => Promise<void>;
   isLoading: boolean;
   onSwitchToAdmin: () => void;
+  activeCustomerId: string;
+  onCustomerChange: (id: string) => void;
 }
 
 const HARDCODED_CRISIS_PROMPT =
@@ -17,9 +46,13 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
   onSendMessage,
   isLoading,
   onSwitchToAdmin,
+  activeCustomerId,
+  onCustomerChange,
 }) => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const activeCustomer = CUSTOMERS.find((c) => c.id === activeCustomerId) || CUSTOMERS[0];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,6 +72,25 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
 
   return (
     <div className="max-w-3xl mx-auto my-6 bg-white rounded-3xl shadow-[0_12px_48px_rgba(92,74,66,0.12)] border border-brand-border/60 overflow-hidden flex flex-col h-[calc(100vh-140px)]">
+      {/* Persona Selector Bar */}
+      <div className="bg-brand-kraftDark/20 px-6 py-2 border-b border-brand-border flex items-center justify-between z-10 text-xs">
+        <span className="font-bold text-brand-roasted/70 uppercase tracking-widest flex items-center space-x-2">
+          <User className="w-3.5 h-3.5" />
+          <span>Demo Persona</span>
+        </span>
+        <select
+          value={activeCustomerId}
+          onChange={(e) => onCustomerChange(e.target.value)}
+          className="bg-white border border-brand-border text-brand-roasted font-bold rounded-full px-3 py-1 outline-none focus:ring-1 focus:ring-brand-roasted cursor-pointer shadow-sm"
+        >
+          {CUSTOMERS.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name} - {c.risk} ({c.ltv})
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Soft Chat Header */}
       <div className="bg-white/90 backdrop-blur-md px-6 py-4 border-b border-brand-border flex items-center justify-between z-10">
         <div className="flex items-center space-x-3">
@@ -58,9 +110,9 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
         {/* Order Crisis Context Chip */}
         <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-white border border-brand-border text-brand-roasted text-xs rounded-full shadow-sm font-bold">
           <Package className="w-4 h-4 text-brand-terracotta" />
-          <span>Order #4501 • 2,000 UAH</span>
+          <span>{activeCustomer.scenario}</span>
           <span className="px-2 py-0.5 rounded-full bg-brand-terracotta text-white text-[10px] uppercase font-extrabold tracking-wider shadow-sm">
-            Delayed
+            Simulated
           </span>
         </div>
       </div>
@@ -74,9 +126,9 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
           <div className="bg-orange-50 border border-orange-200 p-4 rounded-2xl flex items-start space-x-3 text-orange-950 text-xs shadow-sm">
             <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
             <div className="space-y-1 font-sans">
-              <p className="font-bold text-sm">Simulated Crisis Scenario: Spoiled Platter</p>
+              <p className="font-bold text-sm">Simulated Crisis Scenario: Problematic Order</p>
               <p className="font-medium opacity-90 text-sm">
-                User <strong>Ivan Z. (usr_101)</strong> ordered a 2,000 UAH meat & cheese platter. Delivery was delayed 24 hours, cooling chain broke, food spoiled.
+                User <strong>{activeCustomer.name} ({activeCustomer.id})</strong>. {activeCustomer.desc}
               </p>
             </div>
           </div>
