@@ -17,7 +17,7 @@ def predict_churn_risk(user_id: str) -> Dict[str, Any]:
     Returns:
         dict: Churn probability, LTV, risk classification, and recommended action.
     """
-    logger.info(f"[bold magenta]🔬 ML Specialist:[/bold magenta] [white]Evaluating risk profile for {user_id}[/white]")
+    logger.info(f"[bold magenta]ML Specialist:[/bold magenta] [white]Evaluating risk profile for {user_id}[/white]")
     supabase = get_supabase()
 
     cust_res = (
@@ -38,7 +38,7 @@ def predict_churn_risk(user_id: str) -> Dict[str, Any]:
         days_since_order=days,
     )
     
-    logger.info(f"[bold magenta]🔬 ML Specialist:[/bold magenta] [red]Calculated Churn Probability: {prediction['churn_prob']:.2%} ({prediction['risk_level']})[/red]")
+    logger.info(f"[bold magenta]ML Specialist:[/bold magenta] [red]Calculated Churn Probability: {prediction['churn_prob']:.2%} ({prediction['risk_level']})[/red]")
 
     return {
         "status": "success",

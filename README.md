@@ -6,7 +6,7 @@ This project simulates a premium artisanal food marketplace ("Kozatska Ferma"). 
 1. **B2C Support:** A swarm of specialized agents handling a complex customer crisis end-to-end without human intervention.
 2. **A2A Commerce:** Two independent LLMs (a Consumer Agent and a B2B Storefront Agent) autonomously negotiating price, checking inventory, and dispatching logistics in real-time.
 
-## 🚀 Key Features
+## Key Features
 
 *   **Real-Time A2A Negotiation:** Watch two AI agents autonomously haggle over price and inventory constraints. The backend streams the LLM inference back to the frontend in true real-time using an NDJSON (Newline Delimited JSON) Server-Sent Events stream.
 *   **Cinematic Map Storytelling:** The A2A dashboard features a reactive React-Leaflet map that fetches actual street geometries via the public **OSRM API**. As the agents negotiate, the camera flies to the coordinates, draws dashed logistical projections, and dispatches a vehicle upon deal confirmation.
@@ -14,7 +14,7 @@ This project simulates a premium artisanal food marketplace ("Kozatska Ferma"). 
 *   **Decoupled ML Microservice:** Churn prediction is handled by a separate FastAPI service running a scikit-learn Random Forest model, reflecting real-world microservice architectures.
 *   **Authentic Dynamic Tracing:** Agent reasoning, tool latency, and SQL executions are streamed and persisted directly to a Supabase database. We do not use mock pipelines. 
 
-## 🧠 The Agent Swarm
+## The Agent Swarm
 
 ### Crisis Support (B2C)
 1.  **`ferma_crisis_coordinator`:** The brain of the operation. Parses the initial user intent and coordinates the specialists.
@@ -26,7 +26,7 @@ This project simulates a premium artisanal food marketplace ("Kozatska Ferma"). 
 1.  **`consumer_agent`:** Acts on behalf of the buyer. Given strict budget and coordinate constraints, it attempts to secure the best deal.
 2.  **`storefront_agent`:** The B2B seller. Equipped with tools to `check_inventory`, verify `check_loyalty_tier` for discounts, and `dispatch_delivery` to finalize the sale.
 
-## 🛠️ Project Structure
+## Project Structure
 
 *   `/backend/app/agent/`: Core Google ADK agent definitions, runners, and the A2A NDJSON streaming engine.
 *   `/backend/app/api/`: FastAPI route handlers (`/api/chat`, `/api/traces`, `/api/a2a/simulate`).
@@ -35,7 +35,7 @@ This project simulates a premium artisanal food marketplace ("Kozatska Ferma"). 
 *   `/frontend/`: Vite + React + Tailwind frontend featuring the B2C storefront, Admin Trace Panel, and A2A cinematic map.
 *   `/backend/scripts/`: Database seeding and ML training scripts.
 
-## 🔑 Local Setup
+## Local Setup
 
 **1. Database (Supabase):**
 Ensure your Supabase project is active and run the seed script to populate the demo inventory and users:
@@ -66,7 +66,7 @@ cd backend && poetry run uvicorn app.main:app --port 8000 --reload
 cd frontend && npm run dev
 ```
 
-## ☁️ Production Deployment
+## Production Deployment
 
 The architecture is heavily decoupled and optimized for modern serverless and PaaS platforms. 
 

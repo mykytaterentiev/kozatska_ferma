@@ -46,6 +46,8 @@ async def stream_a2a_negotiation() -> AsyncGenerator[str, None]:
     }
     trace_steps.append({"agent": human_turn["speaker"], "function_call": "", "action": human_turn["message"]})
     
+    logger.info(f"[bold magenta]User (Ivan Z.):[/bold magenta] [white]{human_turn['message']}[/white]")
+    
     # Instantly yield the initial human command context
     yield json.dumps({
         "type": "turn",
@@ -72,6 +74,7 @@ async def stream_a2a_negotiation() -> AsyncGenerator[str, None]:
 
         reply_text = ""
         tools_used = []
+        turn_start_time = time.perf_counter()
 
         try:
             logger.info(f"[bold cyan][{active_role}][/bold cyan] [italic]Thinking...[/italic]")
@@ -85,18 +88,21 @@ async def stream_a2a_negotiation() -> AsyncGenerator[str, None]:
                             logger.info(f"[bold cyan][{active_role}][/bold cyan] [yellow]Executing tool: {part.function_call.name}[/yellow]")
 
                         func_resp = getattr(part, "function_response", None)
-                        if func_resp and func_resp.name == "dispatch_delivery":
-                            if hasattr(func_resp.response, "items"):
-                                final_delivery = dict(func_resp.response)
-                                logger.info(f"[bold cyan][{active_role}][/bold cyan] [green]Tool dispatch_delivery successful: {final_delivery.get('delivery_id')}[/green]")
+                        if func_resp:
+                            logger.info(f"[bold cyan][{active_role}][/bold cyan] [green]Received Tool Report: {func_resp.name}[/green]")
+                            if func_resp.name == "dispatch_delivery":
+                                if hasattr(func_resp.response, "items"):
+                                    final_delivery = dict(func_resp.response)
+                                    logger.info(f"[bold cyan][{active_role}][/bold cyan] [green]Tool dispatch_delivery successful: {final_delivery.get('delivery_id')}[/green]")
 
                 if event.is_final_response() and event.content:
                     for part in event.content.parts or []:
                         if part.text:
                             reply_text += part.text
             
+            turn_latency = int((time.perf_counter() - turn_start_time) * 1000)
             clean_reply = reply_text.replace('\n', ' ')[:120]
-            logger.info(f"[bold cyan][{active_role}][/bold cyan] Responded: [dim]{clean_reply}...[/dim]")
+            logger.info(f"[bold cyan][{active_role}][/bold cyan] Synthesized Response in [bold]{turn_latency}ms[/bold]: [dim]{clean_reply}...[/dim]")
         except Exception as e:
             logger.error(f"Error during {active_role} turn: {e}")
             error_turn = {
