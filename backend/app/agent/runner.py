@@ -81,7 +81,7 @@ async def _run_with_adk_runner(
 
     # Try to load existing session, create if it doesn't exist
     try:
-        await global_session_service.load_session(user_id=user_id, session_id=session_id)
+        await global_session_service.get_session(user_id=user_id, session_id=session_id)
     except Exception:
         await global_session_service.create_session(
             app_name="fermaagent", user_id=user_id, session_id=session_id
