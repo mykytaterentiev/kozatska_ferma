@@ -49,11 +49,11 @@ export const MarketingCopilot: React.FC = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-brand-kraftLight text-brand-roasted p-6 font-sans">
+    <div className="flex h-[calc(100vh-4rem)] bg-brand-kraft text-brand-roasted p-6 font-sans">
       <div className="flex flex-col w-full max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-brand-border overflow-hidden">
         
         {/* Header - Added flex-shrink-0 to prevent flex compression overlap */}
-        <div className="px-6 py-4 bg-brand-roasted text-brand-kraftLight flex items-center gap-3 flex-shrink-0 z-10 shadow-sm relative">
+        <div className="px-6 py-4 bg-brand-roasted text-brand-kraft flex items-center gap-3 flex-shrink-0 z-10 shadow-sm relative">
           <span className="text-2xl">🌾</span>
           <div>
             <h2 className="font-bold text-lg tracking-wide uppercase">Marketing Co-Pilot</h2>
@@ -62,7 +62,7 @@ export const MarketingCopilot: React.FC = () => {
         </div>
 
         {/* Output Area */}
-        <div className="flex-1 p-6 overflow-y-auto bg-brand-kraftLight/20">
+        <div className="flex-1 p-6 overflow-y-auto bg-brand-kraft/20">
           {!response && !loading && (
             <div className="h-full flex flex-col items-center justify-center text-brand-roasted/50 text-center space-y-4">
               <span className="text-5xl opacity-50">✍️</span>
@@ -73,7 +73,7 @@ export const MarketingCopilot: React.FC = () => {
           )}
           
           {response && (
-            <div className="prose prose-stone max-w-none text-brand-roasted prose-headings:text-brand-roasted prose-strong:text-brand-roasted prose-p:leading-relaxed prose-pre:bg-brand-roasted prose-pre:text-brand-kraftLight">
+            <div className="prose prose-stone max-w-none text-brand-roasted prose-headings:text-brand-roasted prose-strong:text-brand-roasted prose-p:leading-relaxed prose-pre:bg-brand-roasted prose-pre:text-brand-kraft">
               <ReactMarkdown>
                 {response}
               </ReactMarkdown>
