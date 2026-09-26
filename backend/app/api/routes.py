@@ -166,7 +166,7 @@ def list_traces_for_user() -> list:
         supabase = get_supabase()
         res = (
             supabase.table("agent_traces")
-            .select("id, timestamp, order_id, agent_flow")
+            .select("id, timestamp, order_id, agent_flow, trace_log->>user_id")
             .order("id", desc=True)
             .limit(20)
             .execute()
@@ -179,6 +179,7 @@ def list_traces_for_user() -> list:
                 traces.append({
                     "id": row.get("id"),
                     "order_id": row.get("order_id"),
+                    "user_id": row.get("user_id", "Unknown"),
                     "agent_flow": row.get("agent_flow", "b2c"),
                     "created_at": row.get("timestamp")
                 })
