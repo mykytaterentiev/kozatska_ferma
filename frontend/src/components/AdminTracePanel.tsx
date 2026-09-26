@@ -59,9 +59,15 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger = 0
   };
 
   useEffect(() => {
+    if (initialTraceId !== undefined) {
+      setSelectedTraceId(initialTraceId);
+    }
+  }, [initialTraceId]);
+
+  useEffect(() => {
     fetchTraceList();
-    fetchTrace(initialTraceId || selectedTraceId || undefined);
-  }, [onRefreshTrigger, initialTraceId]);
+    fetchTrace(selectedTraceId || undefined);
+  }, [onRefreshTrigger, selectedTraceId]);
 
   const steps: TraceStep[] = traceRecord?.trace_log?.steps || [];
   const totalLatency = traceRecord?.trace_log?.total_latency_ms || traceRecord?.latency_ms || 1150;
