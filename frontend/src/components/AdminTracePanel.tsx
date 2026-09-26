@@ -192,7 +192,7 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger = 0
           </div>
         ) : (
           steps.map((step, index) => {
-            const isMLStep = agentFlow === 'b2c' && (step.type === 'ml_inference' || step.tool_name === 'predict_churn_risk');
+            const isMLStep = agentFlow === 'b2c' && (step.type === 'ml_inference' || step.tool_name === 'predict_churn_risk' || step.tool_name === 'ml_risk_agent');
             const isResolution = step.type === 'tool_call' && step.tool_name === 'execute_resolution';
             const isMarketingSearch = agentFlow === 'marketing' && step.tool_name === 'search_web';
 
