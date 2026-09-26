@@ -210,11 +210,16 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger = 0
                 mlProb = step.output.churn_prob;
                 mlAction = step.output.action || 'RECOVER';
               } else if (typeof step.output.result === 'string') {
-                const probMatch = step.output.result.match(/Churn Probability:\**\s*(\d+)%/i);
-                if (probMatch) mlProb = parseInt(probMatch[1], 10) / 100;
+                const probMatch = step.output.result.match(/probability(?:[\s:*]|of)+([0-9.]+)/i);
+                if (probMatch) {
+                  const val = parseFloat(probMatch[1]);
+                  mlProb = val > 1 ? val / 100 : val;
+                }
                 
-                const actionMatch = step.output.result.match(/Recommended Action:\**\s*([A-Z_]+)/i) || step.output.result.match(/Action:\**\s*([A-Z_]+)/i);
-                if (actionMatch) mlAction = actionMatch[1];
+                const actionMatch = step.output.result.match(/action(?:[\s:*]|is)+([A-Z_]+)/i);
+                if (actionMatch) {
+                  mlAction = actionMatch[1];
+                }
               }
             }
 
