@@ -269,26 +269,28 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
                   )}
 
                   {/* Code / Data Preview Accordion Box */}
-                  {(step.output || step.details || step.input_args || step.function_call) && (
-                    <div className="mt-4 rounded-xl bg-brand-kraftDark/30 border border-brand-border/60 p-4 font-mono overflow-x-auto shadow-inner">
-                      <div className="text-[11px] uppercase text-brand-roasted/80 font-bold mb-2 flex items-center space-x-1.5">
-                        <Terminal className="w-3.5 h-3.5 text-brand-green" />
-                        <span>{agentFlow === 'a2a' ? 'Agent Action' : 'Execution Metadata'}</span>
+                  {(() => {
+                    const metadata = {
+                      ...(step.function_call ? { function_call: step.function_call } : {}),
+                      ...(step.input_args && Object.keys(step.input_args).length > 0 ? { input_args: step.input_args } : {}),
+                      ...(step.output && Object.keys(step.output).length > 0 ? { output: step.output } : {}),
+                      ...(step.details && Object.keys(step.details).length > 0 ? { details: step.details } : {}),
+                    };
+                    
+                    if (Object.keys(metadata).length === 0) return null;
+
+                    return (
+                      <div className="mt-4 rounded-xl bg-brand-kraftDark/30 border border-brand-border/60 p-4 font-mono overflow-x-auto shadow-inner">
+                        <div className="text-[11px] uppercase text-brand-roasted/80 font-bold mb-2 flex items-center space-x-1.5">
+                          <Terminal className="w-3.5 h-3.5 text-brand-green" />
+                          <span>{agentFlow === 'a2a' ? 'Agent Action' : 'Execution Metadata'}</span>
+                        </div>
+                        <pre className="text-brand-roasted text-sm font-semibold whitespace-pre-wrap leading-relaxed">
+                          {JSON.stringify(metadata, null, 2)}
+                        </pre>
                       </div>
-                      <pre className="text-brand-roasted text-sm font-semibold whitespace-pre-wrap leading-relaxed">
-                        {JSON.stringify(
-                          {
-                            ...(step.function_call ? { function_call: step.function_call } : {}),
-                            ...(step.input_args ? { input_args: step.input_args } : {}),
-                            ...(step.output ? { output: step.output } : {}),
-                            ...(step.details ? { details: step.details } : {}),
-                          },
-                          null,
-                          2
-                        )}
-                      </pre>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               </motion.div>
             );
