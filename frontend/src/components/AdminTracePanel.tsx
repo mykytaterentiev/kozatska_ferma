@@ -22,7 +22,7 @@ interface AdminTracePanelProps {
 export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger = 0, activeCustomerId = 'usr_101', initialTraceId }) => {
   const [traceRecord, setTraceRecord] = useState<AgentTraceRecord | null>(null);
   const [traceList, setTraceList] = useState<{id: number, order_id?: number, user_id?: string, agent_flow?: string, created_at: string}[]>([]);
-  const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null);
+  const [selectedTraceId, setSelectedTraceId] = useState<number | null>(initialTraceId || null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
