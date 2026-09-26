@@ -9,9 +9,47 @@ from app.agent.runner import execute_agent_loop
 from app.agent.a2a_runner import stream_a2a_negotiation
 from app.api.schemas import ChatRequest, ChatResponse
 from app.core.supabase import get_supabase
+from google.genai import types
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from app.agent.marketing import marketing_agent
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["agent"])
+
+marketing_session_service = InMemorySessionService()
+
+@router.post("/marketing/chat")
+async def marketing_chat_endpoint(request: ChatRequest):
+    """Streaming endpoint for the internal Marketing Co-Pilot."""
+    user_id = "marketing_team"
+    session_id = "mktg_session_live"
+    
+    # Ensure session exists
+    try:
+        await marketing_session_service.create_session("fermaagent", user_id, session_id)
+    except Exception:
+        pass # Session already exists
+
+    runner = Runner(
+        agent=marketing_agent,
+        app_name="fermaagent",
+        session_service=marketing_session_service
+    )
+
+    async def generate_marketing_stream():
+        content = types.Content(role="user", parts=[types.Part.from_text(text=request.message)])
+        try:
+            async for event in runner.run_async(user_id=user_id, session_id=session_id, new_message=content):
+                if event.is_final_response() and event.content:
+                    for part in event.content.parts or []:
+                        if part.text:
+                            yield part.text
+        except Exception as e:
+            logger.error(f"Marketing Agent Error: {e}")
+            yield f"\n[Системна помилка]: {e}"
+
+    return StreamingResponse(generate_marketing_stream(), media_type="text/plain")
 
 
 @router.post("/a2a/simulate")

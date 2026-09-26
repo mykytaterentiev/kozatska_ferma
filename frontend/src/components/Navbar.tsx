@@ -1,9 +1,9 @@
 import { FC } from 'react';
-import { MessageSquare, Terminal, RefreshCw, Network } from 'lucide-react';
+import { MessageSquare, Terminal, RefreshCw, Network, PenTool } from 'lucide-react';
 
 interface NavbarProps {
-  activeView: 'b2c' | 'admin' | 'a2a';
-  setActiveView: (view: 'b2c' | 'admin' | 'a2a') => void;
+  activeView: 'b2c' | 'admin' | 'a2a' | 'marketing';
+  setActiveView: (view: 'b2c' | 'admin' | 'a2a' | 'marketing') => void;
   onResetDemo: () => Promise<void>;
   isResetting: boolean;
 }
@@ -76,6 +76,18 @@ export const Navbar: FC<NavbarProps> = ({
           >
             <Network className="w-4 h-4" />
             <span className="hidden sm:inline">A2A Vision</span>
+          </button>
+
+          <button
+            onClick={() => setActiveView('marketing')}
+            className={`flex items-center justify-center space-x-2 px-4 py-1.5 text-sm font-bold rounded-full transition-all duration-200 whitespace-nowrap ${
+              activeView === 'marketing'
+                ? 'bg-white text-brand-roasted shadow-sm border border-brand-border/40'
+                : 'text-brand-roasted/80 hover:text-brand-roasted hover:bg-brand-roasted/5'
+            }`}
+          >
+            <PenTool className="w-4 h-4" />
+            <span className="hidden sm:inline">Marketing Co-Pilot</span>
           </button>
         </div>
 

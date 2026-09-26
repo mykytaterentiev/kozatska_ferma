@@ -3,11 +3,13 @@ import { Navbar } from './components/Navbar';
 import { ClientChatView } from './components/ClientChatView';
 import { AdminTracePanel } from './components/AdminTracePanel';
 import { A2AVision } from './components/A2AVision';
+import { MarketingCopilot } from './components/MarketingCopilot';
 import { ChatMessage } from './types';
 
 export function App() {
-  const [activeView, setActiveView] = useState<'b2c' | 'admin' | 'a2a'>('b2c');
+  const [activeView, setActiveView] = useState<'b2c' | 'admin' | 'a2a' | 'marketing'>('b2c');
   const [messages, setMessages] = useState<ChatMessage[]>([
+
     {
       id: 'init-1',
       sender: 'agent',
@@ -145,9 +147,11 @@ export function App() {
                 isLoading={isLoading}
                 onSwitchToAdmin={() => setActiveView('admin')}
               />
-            ) : (
+            ) : activeView === 'admin' ? (
               <AdminTracePanel onRefreshTrigger={traceTrigger} />
-            )}
+            ) : activeView === 'marketing' ? (
+              <MarketingCopilot />
+            ) : null}
           </main>
       </div>
     </div>
