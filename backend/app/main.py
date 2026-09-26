@@ -3,12 +3,19 @@
 Assembles API routers, CORS middleware, and lifecycle configurations.
 """
 
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router as api_router
 from app.core.config import settings
 from app.ml.service import ml_app
+
+# Configure global logging for terminal output
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
