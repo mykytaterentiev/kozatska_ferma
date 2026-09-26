@@ -158,17 +158,21 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
                     <p className="whitespace-pre-line text-[15px]">{msg.text}</p>
 
                     {/* Resolution Badges on Agent Response */}
-                    {!isUser && msg.text.includes('refund') && (
+                    {!isUser && (msg.refunded || msg.voucher) && (
                       <div className="mt-3 pt-3 border-t border-brand-border/40 flex flex-wrap gap-2">
-                        <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200 shadow-sm">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Refund Processed: 2,000 UAH</span>
-                        </div>
+                        {msg.refunded && (
+                          <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200 shadow-sm">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Refund Processed: Order #{msg.orderId || '4501'}</span>
+                          </div>
+                        )}
 
-                        <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-amber-50 text-amber-900 rounded-full text-xs font-bold border border-amber-200 shadow-sm">
-                          <Tag className="w-3.5 h-3.5 text-amber-600" />
-                          <span>Code: FERMA-RECOVER-20</span>
-                        </div>
+                        {msg.voucher && (
+                          <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-amber-50 text-amber-900 rounded-full text-xs font-bold border border-amber-200 shadow-sm">
+                            <Tag className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Code: {msg.voucher}</span>
+                          </div>
+                        )}
 
                         <button
                           onClick={onSwitchToAdmin}

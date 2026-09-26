@@ -73,8 +73,14 @@ export function App() {
         text: data.reply,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         orderId: data.order_id,
-        refunded: data.reply.toLowerCase().includes('refund'),
-        voucher: data.reply.includes('FERMA-RECOVER') ? 'FERMA-RECOVER-20' : undefined,
+        refunded: data.reply.toLowerCase().includes('refund') && !data.reply.toLowerCase().includes('do not authorize') && !data.reply.toLowerCase().includes('escalate'),
+        voucher: data.reply.includes('FERMA-VIP-30') 
+                  ? 'FERMA-VIP-30' 
+                  : data.reply.includes('FERMA-RECOVER-20') 
+                    ? 'FERMA-RECOVER-20' 
+                    : data.reply.includes('FERMA-CARE-5')
+                      ? 'FERMA-CARE-5'
+                      : undefined,
       };
 
       setMessages((prev) => [...prev, agentMsg]);
