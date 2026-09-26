@@ -1,5 +1,6 @@
 """FastAPI route handlers for chat, tracing, and demo management."""
 
+import time
 import logging
 from typing import Any, Dict
 from fastapi import APIRouter, HTTPException
@@ -70,6 +71,26 @@ async def marketing_chat_endpoint(request: ChatRequest):
                         elif getattr(part, "function_response", None):
                             tool_name = part.function_response.name
                             logger.info(f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [green]Received Tool Report: {tool_name}[/green]")
+                            
+                            resp_data = getattr(part.function_response, "response", {})
+                            if isinstance(resp_data, dict):
+                                output_data = resp_data
+                            elif hasattr(resp_data, "items"):
+                                output_data = dict(resp_data)
+                            else:
+                                output_data = {"result": str(resp_data)}
+                                
+                            trace_steps.append({
+                                "step_number": step_counter,
+                                "type": "tool_response",
+                                "tool_name": tool_name,
+                                "title": "Data Acquired",
+                                "status": "completed",
+                                "latency_ms": int((time.perf_counter() - start_time) * 1000),
+                                "summary": f"Ingested results from {tool_name}",
+                                "output": output_data
+                            })
+                            step_counter += 1
 
                 if event.is_final_response() and event.content:
                     for part in event.content.parts or []:
@@ -88,7 +109,10 @@ async def marketing_chat_endpoint(request: ChatRequest):
                 "status": "completed",
                 "latency_ms": latency,
                 "summary": "WriterAgent generated final response",
-                "output": {"length": len(final_reply)}
+                "output": {
+                    "length": len(final_reply),
+                    "generated_text": final_reply[:500] + "..." if len(final_reply) > 500 else final_reply
+                }
             })
             
             trace_payload = {

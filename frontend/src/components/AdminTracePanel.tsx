@@ -148,7 +148,7 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
               <span>Inference Engine</span>
             </span>
             <p className="text-lg sm:text-xl font-bold text-brand-roasted mt-1">
-              {agentFlow === 'marketing' ? 'Gemini 2.5 Flash' : 'Gemini Flash'}
+              {agentFlow === 'marketing' ? 'Gemini 3.1 Flash' : 'Gemini Flash'}
             </p>
             <span className="text-[11px] font-mono font-bold text-brand-roasted/70">Function Calling</span>
           </div>
