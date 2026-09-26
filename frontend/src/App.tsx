@@ -177,7 +177,7 @@ export function App() {
                 onCustomerChange={handleCustomerChange}
               />
             ) : activeView === 'admin' ? (
-              <AdminTracePanel onRefreshTrigger={traceTrigger} />
+              <AdminTracePanel onRefreshTrigger={traceTrigger} activeCustomerId={activeCustomerId} />
             ) : activeView === 'marketing' ? (
               <MarketingCopilot />
             ) : null}

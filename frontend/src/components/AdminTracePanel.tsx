@@ -15,9 +15,10 @@ import { AgentTraceRecord, TraceStep } from '../types';
 
 interface AdminTracePanelProps {
   onRefreshTrigger?: number;
+  activeCustomerId?: string;
 }
 
-export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) => {
+export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger = 0, activeCustomerId = 'usr_101' }) => {
   const [traceRecord, setTraceRecord] = useState<AgentTraceRecord | null>(null);
   const [traceList, setTraceList] = useState<{id: number, order_id?: number, user_id?: string, agent_flow?: string, created_at: string}[]>([]);
   const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null);
@@ -36,13 +37,13 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
     }
   };
 
-  const fetchTrace = async (traceId?: number | null) => {
+  const fetchTrace = async (traceId?: number) => {
     setLoading(true);
     setError(null);
     try {
-      let url = '/api/traces/usr_101';
+      let url = `/api/traces/${activeCustomerId}`;
       if (traceId) url += `?trace_id=${traceId}`;
-      
+
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP error ${res.status}`);
       const data: AgentTraceRecord = await res.json();
