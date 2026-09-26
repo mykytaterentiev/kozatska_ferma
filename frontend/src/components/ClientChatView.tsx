@@ -33,7 +33,7 @@ interface ClientChatViewProps {
   messages: ChatMessage[];
   onSendMessage: (message: string) => Promise<void>;
   isLoading: boolean;
-  onSwitchToAdmin: () => void;
+  onSwitchToAdmin: (traceId?: number) => void;
   activeCustomerId: string;
   onCustomerChange: (id: string) => void;
 }
@@ -175,7 +175,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
                         )}
 
                         <button
-                          onClick={onSwitchToAdmin}
+                          onClick={() => onSwitchToAdmin(msg.traceId)}
                           className="inline-flex items-center space-x-1 px-3 py-1 bg-brand-roasted text-white hover:bg-brand-roasted/90 rounded-full text-xs font-bold transition-all shadow-sm"
                         >
                           <Sparkles className="w-3 h-3 text-amber-400" />

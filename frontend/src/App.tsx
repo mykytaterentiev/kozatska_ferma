@@ -26,6 +26,7 @@ export function App() {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [traceTrigger, setTraceTrigger] = useState(0);
+  const [focusedTraceId, setFocusedTraceId] = useState<number | undefined>();
   const [isResetting, setIsResetting] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -81,6 +82,7 @@ export function App() {
                     : data.reply.includes('FERMA-CARE-5')
                       ? 'FERMA-CARE-5'
                       : undefined,
+        traceId: data.trace_id,
       };
 
       setMessages((prev) => [...prev, agentMsg]);
@@ -172,12 +174,15 @@ export function App() {
                 messages={messages}
                 onSendMessage={handleSendMessage}
                 isLoading={isLoading}
-                onSwitchToAdmin={() => setActiveView('admin')}
+                onSwitchToAdmin={(traceId) => {
+                  setFocusedTraceId(traceId);
+                  setActiveView('admin');
+                }}
                 activeCustomerId={activeCustomerId}
                 onCustomerChange={handleCustomerChange}
               />
             ) : activeView === 'admin' ? (
-              <AdminTracePanel onRefreshTrigger={traceTrigger} activeCustomerId={activeCustomerId} />
+              <AdminTracePanel onRefreshTrigger={traceTrigger} activeCustomerId={activeCustomerId} initialTraceId={focusedTraceId} />
             ) : activeView === 'marketing' ? (
               <MarketingCopilot />
             ) : null}

@@ -42,4 +42,5 @@ export interface ChatMessage {
   orderId?: number;
   refunded?: boolean;
   voucher?: string;
+  traceId?: number;
 }

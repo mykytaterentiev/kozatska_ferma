@@ -16,9 +16,10 @@ import { AgentTraceRecord, TraceStep } from '../types';
 interface AdminTracePanelProps {
   onRefreshTrigger?: number;
   activeCustomerId?: string;
+  initialTraceId?: number;
 }
 
-export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger = 0, activeCustomerId = 'usr_101' }) => {
+export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger = 0, activeCustomerId = 'usr_101', initialTraceId }) => {
   const [traceRecord, setTraceRecord] = useState<AgentTraceRecord | null>(null);
   const [traceList, setTraceList] = useState<{id: number, order_id?: number, user_id?: string, agent_flow?: string, created_at: string}[]>([]);
   const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null);
@@ -59,8 +60,8 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger = 0
 
   useEffect(() => {
     fetchTraceList();
-    fetchTrace(selectedTraceId);
-  }, [onRefreshTrigger]);
+    fetchTrace(initialTraceId || selectedTraceId || undefined);
+  }, [onRefreshTrigger, initialTraceId]);
 
   const steps: TraceStep[] = traceRecord?.trace_log?.steps || [];
   const totalLatency = traceRecord?.trace_log?.total_latency_ms || traceRecord?.latency_ms || 1150;
