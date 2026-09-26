@@ -16,6 +16,8 @@ from app.core.supabase import get_supabase
 
 logger = logging.getLogger(__name__)
 
+# Global session service to maintain conversation history across turns
+global_session_service = InMemorySessionService()
 
 def _process_tool_call(
     part: Any,
@@ -75,17 +77,20 @@ async def _run_with_adk_runner(
 ) -> Tuple[str, List[Dict[str, Any]], int]:
     """Execute using Google ADK Runner capturing authentic tool events."""
     start_time = time.perf_counter()
-    session_service = InMemorySessionService()
-    session_id = f"adk_session_{uuid.uuid4().hex[:8]}"
+    session_id = f"adk_session_{user_id}"
 
-    await session_service.create_session(
-        app_name="fermaagent", user_id=user_id, session_id=session_id
-    )
+    # Try to load existing session, create if it doesn't exist
+    try:
+        await global_session_service.load_session(user_id=user_id, session_id=session_id)
+    except Exception:
+        await global_session_service.create_session(
+            app_name="fermaagent", user_id=user_id, session_id=session_id
+        )
 
     runner = Runner(
         agent=root_agent,
         app_name="fermaagent",
-        session_service=session_service,
+        session_service=global_session_service,
     )
 
     contextual_message = f"[System Context: The current customer speaking to you has user_id='{user_id}']\n\n{user_message}"
