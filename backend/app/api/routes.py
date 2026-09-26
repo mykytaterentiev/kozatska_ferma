@@ -115,12 +115,22 @@ def list_traces_for_user() -> list:
         supabase = get_supabase()
         res = (
             supabase.table("agent_traces")
-            .select("id, session_id, agent_name, created_at")
+            .select("id, timestamp, order_id")
             .order("id", desc=True)
             .limit(20)
             .execute()
         )
-        return res.data if res.data else []
+        
+        # Map timestamp to created_at for frontend compatibility
+        traces = []
+        if res.data:
+            for row in res.data:
+                traces.append({
+                    "id": row.get("id"),
+                    "order_id": row.get("order_id"),
+                    "created_at": row.get("timestamp")
+                })
+        return traces
     except Exception as e:
         logger.error(f"Error fetching trace list: {e}")
         return []
