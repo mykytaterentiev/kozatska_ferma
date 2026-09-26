@@ -52,18 +52,24 @@ CREATE TABLE IF NOT EXISTS agent_traces (
 CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders(customer_id);
 CREATE INDEX IF NOT EXISTS idx_agent_traces_order_id ON agent_traces(order_id);
 
--- Disable Row Level Security (RLS) for demo/presentation access via publishable key
-ALTER TABLE customers DISABLE ROW LEVEL SECURITY;
-ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
-ALTER TABLE agent_traces DISABLE ROW LEVEL SECURITY;
-ALTER TABLE inventory DISABLE ROW LEVEL SECURITY;
-ALTER TABLE deliveries DISABLE ROW LEVEL SECURITY;
+-- Enable Row Level Security (RLS)
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE agent_traces ENABLE ROW LEVEL SECURITY;
+ALTER TABLE inventory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE deliveries ENABLE ROW LEVEL SECURITY;
 
--- Alternatively, if RLS is enforced at the project level, allow all operations:
--- DROP POLICY IF EXISTS "Allow all on customers" ON customers;
--- CREATE POLICY "Allow all on customers" ON customers FOR ALL TO public USING (true) WITH CHECK (true);
--- DROP POLICY IF EXISTS "Allow all on orders" ON orders;
--- CREATE POLICY "Allow all on orders" ON orders FOR ALL TO public USING (true) WITH CHECK (true);
--- DROP POLICY IF EXISTS "Allow all on agent_traces" ON agent_traces;
--- CREATE POLICY "Allow all on agent_traces" ON agent_traces FOR ALL TO public USING (true) WITH CHECK (true);
+-- Allow full access to authenticated/service_role keys
+CREATE POLICY "Allow service_role full access to customers" ON customers FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Allow service_role full access to orders" ON orders FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Allow service_role full access to agent_traces" ON agent_traces FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Allow service_role full access to inventory" ON inventory FOR ALL TO service_role USING (true) WITH CHECK (true);
+CREATE POLICY "Allow service_role full access to deliveries" ON deliveries FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- Allow anon role read/write access for the demo (since the Python SDK defaults to anon if not configured)
+CREATE POLICY "Allow anon access to customers" ON customers FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon access to orders" ON orders FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon access to agent_traces" ON agent_traces FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon access to inventory" ON inventory FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon access to deliveries" ON deliveries FOR ALL TO anon USING (true) WITH CHECK (true);
 
