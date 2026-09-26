@@ -19,7 +19,7 @@ interface AdminTracePanelProps {
 
 export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) => {
   const [traceRecord, setTraceRecord] = useState<AgentTraceRecord | null>(null);
-  const [traceList, setTraceList] = useState<{id: number, session_id: string, agent_name: string, created_at: string}[]>([]);
+  const [traceList, setTraceList] = useState<{id: number, order_id?: number, agent_flow?: string, created_at: string}[]>([]);
   const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,11 +95,14 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
                 className="text-xs font-mono bg-white border border-brand-border text-brand-roasted rounded-lg px-2 py-1 focus:ring-1 focus:ring-brand-roasted focus:outline-none cursor-pointer"
               >
                 <option value="" disabled>Select historical run...</option>
-                {traceList.map(t => (
-                  <option key={t.id} value={t.id}>
-                    Run #{t.id} • {new Date(t.created_at).toLocaleTimeString()}
-                  </option>
-                ))}
+                {traceList.map(t => {
+                  const flowLabel = t.agent_flow === 'marketing' ? 'Marketing' : t.agent_flow === 'a2a' ? 'A2A' : 'B2C';
+                  return (
+                    <option key={t.id} value={t.id}>
+                      Run #{t.id} [{flowLabel}] • {new Date(t.created_at).toLocaleTimeString()}
+                    </option>
+                  );
+                })}
               </select>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-brand-roasted">
