@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 export const MarketingCopilot: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -72,10 +73,10 @@ export const MarketingCopilot: React.FC = () => {
           )}
           
           {response && (
-            <div className="prose prose-stone max-w-none prose-p:leading-relaxed prose-pre:bg-brand-roasted prose-pre:text-brand-kraftLight">
-              <pre className="whitespace-pre-wrap font-sans text-brand-roasted bg-transparent p-0 m-0 text-base">
+            <div className="prose prose-stone max-w-none text-brand-roasted prose-headings:text-brand-roasted prose-strong:text-brand-roasted prose-p:leading-relaxed prose-pre:bg-brand-roasted prose-pre:text-brand-kraftLight">
+              <ReactMarkdown>
                 {response}
-              </pre>
+              </ReactMarkdown>
               <div ref={endRef} />
             </div>
           )}
