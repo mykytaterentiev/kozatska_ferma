@@ -50,10 +50,10 @@ export const MarketingCopilot: React.FC = () => {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-brand-kraftLight text-brand-roasted p-6 font-sans">
-      <div className="flex flex-col w-full max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-brand-roasted/10 overflow-hidden">
+      <div className="flex flex-col w-full max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-brand-border overflow-hidden">
         
-        {/* Header */}
-        <div className="px-6 py-4 bg-brand-roasted text-brand-kraftLight flex items-center gap-3">
+        {/* Header - Added flex-shrink-0 to prevent flex compression overlap */}
+        <div className="px-6 py-4 bg-brand-roasted text-brand-kraftLight flex items-center gap-3 flex-shrink-0 z-10 shadow-sm relative">
           <span className="text-2xl">🌾</span>
           <div>
             <h2 className="font-bold text-lg tracking-wide uppercase">Marketing Co-Pilot</h2>
@@ -77,7 +77,7 @@ export const MarketingCopilot: React.FC = () => {
               <ReactMarkdown>
                 {response}
               </ReactMarkdown>
-              <div ref={endRef} />
+              <div ref={endRef} className="h-8" />
             </div>
           )}
           
@@ -92,20 +92,20 @@ export const MarketingCopilot: React.FC = () => {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-white border-t border-brand-roasted/10">
+        <div className="p-4 bg-white border-t border-brand-border shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex-shrink-0">
           <form onSubmit={handleGenerate} className="flex gap-4">
             <input
               type="text"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="For example: Write a post about BBQ season and our new cheese..."
-              className="flex-1 rounded-lg border-brand-roasted/20 bg-brand-kraftLight/30 focus:bg-white focus:ring-brand-roasted focus:border-brand-roasted transition-colors p-3"
+              placeholder="Enter prompt here... (e.g., Write a post about BBQ season)"
+              className="flex-1 rounded-lg border-2 border-brand-border bg-white text-brand-roasted placeholder:text-brand-roasted/40 focus:bg-white focus:ring-0 focus:border-brand-roasted transition-colors p-3 shadow-sm font-medium"
               disabled={loading}
             />
             <button
               type="submit"
               disabled={loading || !prompt.trim()}
-              className="px-6 py-3 bg-brand-terracotta hover:bg-red-700 text-white font-medium tracking-wide uppercase text-sm rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="px-8 py-3 bg-brand-roasted hover:bg-brand-roasted/90 text-white font-bold tracking-wider uppercase text-sm rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               Generate
             </button>

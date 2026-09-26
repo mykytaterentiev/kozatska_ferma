@@ -40,8 +40,8 @@ export const Navbar: FC<NavbarProps> = ({
             onClick={() => setActiveView('b2c')}
             className={`flex items-center justify-center space-x-2 px-4 py-1.5 text-sm font-bold rounded-full transition-all duration-200 whitespace-nowrap ${
               activeView === 'b2c'
-                ? 'bg-white text-brand-roasted shadow-sm border border-brand-border/40'
-                : 'text-brand-roasted/80 hover:text-brand-roasted hover:bg-brand-roasted/5'
+                ? 'bg-brand-roasted text-white shadow-md border border-brand-roasted'
+                : 'text-brand-roasted/80 hover:text-brand-roasted hover:bg-brand-roasted/5 border border-transparent'
             }`}
           >
             <MessageSquare className="w-4 h-4" />
@@ -52,8 +52,8 @@ export const Navbar: FC<NavbarProps> = ({
             onClick={() => setActiveView('admin')}
             className={`flex items-center justify-center space-x-2 px-4 py-1.5 text-sm font-bold rounded-full transition-all duration-200 whitespace-nowrap ${
               activeView === 'admin'
-                ? 'bg-white text-brand-roasted shadow-sm border border-brand-border/40'
-                : 'text-brand-roasted/80 hover:text-brand-roasted hover:bg-brand-roasted/5'
+                ? 'bg-brand-roasted text-white shadow-md border border-brand-roasted'
+                : 'text-brand-roasted/80 hover:text-brand-roasted hover:bg-brand-roasted/5 border border-transparent'
             }`}
           >
             <Terminal className="w-4 h-4" />
@@ -70,8 +70,8 @@ export const Navbar: FC<NavbarProps> = ({
             onClick={() => setActiveView('a2a')}
             className={`flex items-center justify-center space-x-2 px-4 py-1.5 text-sm font-bold rounded-full transition-all duration-200 whitespace-nowrap ${
               activeView === 'a2a'
-                ? 'bg-white text-brand-roasted shadow-sm border border-brand-border/40'
-                : 'text-brand-roasted/80 hover:text-brand-roasted hover:bg-brand-roasted/5'
+                ? 'bg-brand-roasted text-white shadow-md border border-brand-roasted'
+                : 'text-brand-roasted/80 hover:text-brand-roasted hover:bg-brand-roasted/5 border border-transparent'
             }`}
           >
             <Network className="w-4 h-4" />
@@ -82,8 +82,8 @@ export const Navbar: FC<NavbarProps> = ({
             onClick={() => setActiveView('marketing')}
             className={`flex items-center justify-center space-x-2 px-4 py-1.5 text-sm font-bold rounded-full transition-all duration-200 whitespace-nowrap ${
               activeView === 'marketing'
-                ? 'bg-white text-brand-roasted shadow-sm border border-brand-border/40'
-                : 'text-brand-roasted/80 hover:text-brand-roasted hover:bg-brand-roasted/5'
+                ? 'bg-brand-roasted text-white shadow-md border border-brand-roasted'
+                : 'text-brand-roasted/80 hover:text-brand-roasted hover:bg-brand-roasted/5 border border-transparent'
             }`}
           >
             <PenTool className="w-4 h-4" />
@@ -102,7 +102,7 @@ export const Navbar: FC<NavbarProps> = ({
             onClick={onResetDemo}
             disabled={isResetting}
             title="Reset Order #4501 to delayed_critical for a fresh demo run"
-            className="flex items-center justify-center space-x-1.5 text-xs font-bold px-4 py-1.5 rounded-full bg-white text-brand-terracotta hover:bg-brand-terracotta hover:text-white border border-brand-terracotta/40 transition-all disabled:opacity-50 whitespace-nowrap shadow-sm"
+            className="flex items-center justify-center space-x-1.5 text-xs font-bold px-4 py-1.5 rounded-full bg-white text-red-700 hover:bg-red-700 hover:text-white border border-red-700/40 transition-all disabled:opacity-50 whitespace-nowrap shadow-sm"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin' : ''}`} />
             <span className="hidden md:inline">Reset Scenario</span>
