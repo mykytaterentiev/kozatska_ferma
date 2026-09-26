@@ -39,12 +39,25 @@ async def marketing_chat_endpoint(request: ChatRequest):
 
     async def generate_marketing_stream():
         content = types.Content(role="user", parts=[types.Part.from_text(text=request.message)])
+        logger.info(f"[bold magenta]Marketing User:[/bold magenta] [white]{request.message}[/white]")
+        logger.info("[bold cyan]Marketing Co-Pilot:[/bold cyan] [italic]Thinking...[/italic]")
+        
         try:
             async for event in runner.run_async(user_id=user_id, session_id=session_id, new_message=content):
+                if event.content and getattr(event.content, "parts", None):
+                    for part in event.content.parts:
+                        if getattr(part, "function_call", None):
+                            tool_name = part.function_call.name
+                            logger.info(f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [yellow]Executing tool: {tool_name}[/yellow]")
+                        elif getattr(part, "function_response", None):
+                            tool_name = part.function_response.name
+                            logger.info(f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [green]Received Tool Report: {tool_name}[/green]")
+
                 if event.is_final_response() and event.content:
                     for part in event.content.parts or []:
                         if part.text:
                             yield part.text
+            logger.info("[bold cyan]Marketing Co-Pilot:[/bold cyan] [dim]Finished streaming response.[/dim]")
         except Exception as e:
             logger.error(f"Marketing Agent Error: {e}")
             yield f"\n[Системна помилка]: {e}"
