@@ -81,10 +81,15 @@ async def _run_with_adk_runner(
 
     # Try to load existing session, create if it doesn't exist
     try:
-        await global_session_service.get_session(
+        session = await global_session_service.get_session(
             app_name="fermaagent", user_id=user_id, session_id=session_id
         )
-    except Exception:
+        if not session:
+            await global_session_service.create_session(
+                app_name="fermaagent", user_id=user_id, session_id=session_id
+            )
+    except Exception as e:
+        logger.warning(f"Session retrieval error, attempting to create: {e}")
         await global_session_service.create_session(
             app_name="fermaagent", user_id=user_id, session_id=session_id
         )
