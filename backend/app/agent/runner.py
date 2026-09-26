@@ -191,9 +191,48 @@ def _persist_trace(
     latency: int,
     steps: List[Dict[str, Any]],
 ) -> int:
-    """Save execution trace payload to Supabase."""
+    """Save execution trace payload to Supabase. Appends to existing trace if available."""
     try:
         supabase = get_supabase()
+
+        # Find the most recent trace for this user
+        res = (
+            supabase.table("agent_traces")
+            .select("*")
+            .eq("agent_flow", "b2c")
+            .eq("trace_log->>user_id", user_id)
+            .order("id", desc=True)
+            .limit(1)
+            .execute()
+        )
+
+        if res.data:
+            existing = res.data[0]
+            existing_log = existing["trace_log"]
+            
+            # Re-number new steps based on existing length
+            last_step_num = existing_log["steps"][-1]["step_number"] if existing_log["steps"] else 0
+            for s in steps:
+                s["step_number"] = last_step_num + 1
+                last_step_num += 1
+                
+            existing_log["steps"].extend(steps)
+            existing_log["total_latency_ms"] = existing_log.get("total_latency_ms", 0) + latency
+            existing_log["user_prompt"] = user_message
+            existing_log["agent_response"] = reply
+
+            update_res = (
+                supabase.table("agent_traces")
+                .update({
+                    "latency_ms": existing_log["total_latency_ms"],
+                    "trace_log": existing_log
+                })
+                .eq("id", existing["id"])
+                .execute()
+            )
+            if update_res.data:
+                return int(update_res.data[0]["id"])
+
         trace_payload = {
             "user_id": user_id,
             "order_id": order_id,
@@ -202,7 +241,7 @@ def _persist_trace(
             "total_latency_ms": latency,
             "steps": steps,
         }
-        res = (
+        ins = (
             supabase.table("agent_traces")
             .insert(
                 {
@@ -214,8 +253,8 @@ def _persist_trace(
             )
             .execute()
         )
-        if res.data:
-            return int(res.data[0].get("id", 0))
+        if ins.data:
+            return int(ins.data[0].get("id", 0))
     except Exception as exc:
         logger.warning(f"Failed to persist agent trace: {exc}")
     return 0
