@@ -63,6 +63,7 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
 
   const steps: TraceStep[] = traceRecord?.trace_log?.steps || [];
   const totalLatency = traceRecord?.trace_log?.total_latency_ms || traceRecord?.latency_ms || 1150;
+  const agentFlow = traceRecord?.agent_flow || 'b2c';
 
   return (
     <div className="max-w-5xl mx-auto my-6 px-4 pb-12 text-brand-roasted">
@@ -73,7 +74,11 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
             <div className="flex flex-wrap items-center gap-3 mb-2">
               <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-wider bg-brand-terracotta/10 text-brand-terracotta border border-brand-terracotta/20">
                 <span className="w-2 h-2 rounded-full bg-brand-terracotta animate-pulse"></span>
-                <span>Autonomous ReAct Trace</span>
+                <span>
+                  {agentFlow === 'marketing' ? 'LoopAgent Workflow' : 
+                   agentFlow === 'a2a' ? 'A2A Real-Time Stream' : 
+                   'Autonomous ReAct Trace'}
+                </span>
               </span>
               
               {/* Dropdown for Historical Runs */}
@@ -101,14 +106,16 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
               AGENT EXECUTION TRACE
             </h1>
             <p className="text-brand-roasted/70 text-sm sm:text-base mt-2 font-sans font-medium">
-              Live ReAct Loop • Real-Time Tool Invocations • ML Decision Boundary
+              {agentFlow === 'marketing' ? 'Web Search • ReAct Loop • Market Assessment' : 
+               agentFlow === 'a2a' ? 'Storefront vs Consumer • Live Negotiation' : 
+               'Live ReAct Loop • Real-Time Tool Invocations • ML Decision Boundary'}
             </p>
           </div>
 
           <button
             onClick={() => {
                 fetchTraceList();
-                fetchTrace(); // Fetch latest without ID to reset
+                fetchTrace();
             }}
             disabled={loading}
             className="self-start md:self-auto flex items-center space-x-2 px-5 py-2.5 rounded-full bg-brand-roasted hover:bg-brand-roasted/90 text-white font-sans font-semibold text-sm transition-all shadow-sm disabled:opacity-50"
@@ -126,7 +133,9 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
               <span>Orchestrator</span>
             </span>
             <p className="text-lg sm:text-xl font-bold text-brand-roasted mt-1">Google ADK</p>
-            <span className="text-[11px] font-mono font-bold text-brand-roasted/70">LlmAgent Framework</span>
+            <span className="text-[11px] font-mono font-bold text-brand-roasted/70">
+              {agentFlow === 'marketing' ? 'SequentialAgent' : 'LlmAgent Framework'}
+            </span>
           </div>
 
           <div className="bg-white border border-brand-border rounded-2xl p-4 shadow-sm">
@@ -134,17 +143,23 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
               <Zap className="w-4 h-4 text-amber-500" />
               <span>Inference Engine</span>
             </span>
-            <p className="text-lg sm:text-xl font-bold text-brand-roasted mt-1">Gemini Flash</p>
+            <p className="text-lg sm:text-xl font-bold text-brand-roasted mt-1">
+              {agentFlow === 'marketing' ? 'Gemini 2.5 Flash' : 'Gemini Flash'}
+            </p>
             <span className="text-[11px] font-mono font-bold text-brand-roasted/70">Function Calling</span>
           </div>
 
           <div className="bg-white border border-brand-border rounded-2xl p-4 shadow-sm">
             <span className="text-xs text-brand-roasted/80 uppercase font-bold tracking-wider flex items-center space-x-1">
               <Activity className="w-4 h-4 text-brand-terracotta" />
-              <span>ML Classifier</span>
+              <span>{agentFlow === 'marketing' ? 'Data Source' : agentFlow === 'a2a' ? 'Constraint' : 'ML Classifier'}</span>
             </span>
-            <p className="text-lg sm:text-xl font-bold text-brand-roasted mt-1">RandomForest</p>
-            <span className="text-[11px] font-mono font-bold text-brand-roasted/70">Scikit-Learn (88% Risk)</span>
+            <p className="text-lg sm:text-xl font-bold text-brand-roasted mt-1">
+              {agentFlow === 'marketing' ? 'DuckDuckGo API' : agentFlow === 'a2a' ? 'Strict Persona' : 'RandomForest'}
+            </p>
+            <span className="text-[11px] font-mono font-bold text-brand-roasted/70">
+              {agentFlow === 'marketing' ? 'Live Web Search' : agentFlow === 'a2a' ? 'Store vs Consumer' : 'Scikit-Learn (88% Risk)'}
+            </span>
           </div>
 
           <div className="bg-white border border-brand-border rounded-2xl p-4 shadow-sm">
@@ -172,12 +187,13 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
           </div>
         ) : (
           steps.map((step, index) => {
-            const isMLStep = step.type === 'ml_inference' || step.tool_name === 'predict_churn_risk';
+            const isMLStep = agentFlow === 'b2c' && (step.type === 'ml_inference' || step.tool_name === 'predict_churn_risk');
             const isResolution = step.type === 'tool_call' && step.tool_name === 'execute_resolution';
+            const isMarketingSearch = agentFlow === 'marketing' && step.tool_name === 'search_web';
 
             return (
               <motion.div
-                key={step.step_number}
+                key={step.step_number || index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.15 }}
@@ -186,14 +202,13 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
                 {/* Timeline node icon */}
                 <div
                   className={`absolute -left-[35px] sm:-left-[43px] top-6 w-9 h-9 rounded-full flex items-center justify-center border-4 border-brand-kraft shadow-sm text-white ${
-                    isMLStep
-                      ? 'bg-brand-terracotta'
-                      : isResolution
-                      ? 'bg-brand-green'
-                      : 'bg-brand-roasted'
+                    isMLStep ? 'bg-brand-terracotta' : 
+                    isMarketingSearch ? 'bg-blue-500' :
+                    isResolution ? 'bg-brand-green' : 
+                    'bg-brand-roasted'
                   }`}
                 >
-                  <span className="font-mono text-sm font-bold">{step.step_number}</span>
+                  <span className="font-mono text-sm font-bold">{step.step_number || index + 1}</span>
                 </div>
 
                 {/* Step Card */}
@@ -208,25 +223,25 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                     <div className="flex items-center space-x-3">
                       <span className="px-2.5 py-1 rounded-full text-[11px] font-sans font-bold tracking-wider uppercase bg-brand-roasted/5 text-brand-roasted/70 border border-brand-roasted/10">
-                        STEP 0{step.step_number}
+                        {agentFlow === 'a2a' && step.agent ? `AGENT: ${step.agent}` : `STEP 0${step.step_number || index + 1}`}
                       </span>
                       <h3 className="text-xl sm:text-2xl font-bold font-serif text-brand-roasted tracking-tight">
-                        {step.title}
+                        {step.title || (agentFlow === 'a2a' ? 'Negotiation Turn' : 'Execution Step')}
                       </h3>
                     </div>
 
                     <div className="flex items-center space-x-2 font-mono text-xs text-brand-roasted/50 font-medium self-start sm:self-auto">
                       <Clock className="w-3.5 h-3.5" />
-                      <span>Latency: <strong className="text-brand-roasted">{step.latency_ms} ms</strong></span>
+                      <span>Latency: <strong className="text-brand-roasted">{step.latency_ms || '< 50'} ms</strong></span>
                     </div>
                   </div>
 
                   {/* Summary / Intent / Tool Content */}
                   <p className="text-base sm:text-lg text-brand-roasted/80 font-sans font-medium leading-relaxed mb-4">
-                    {step.summary}
+                    {step.summary || step.action || ''}
                   </p>
 
-                  {/* HIGHLIGHT THIS: Glowing badge for ML Churn Step */}
+                  {/* HIGHLIGHT THIS: Glowing badge for ML Churn Step (B2C Only) */}
                   {isMLStep && (
                     <div className="my-5 p-5 rounded-2xl bg-amber-100/50 border border-amber-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
                       <div className="flex items-center space-x-4">
@@ -250,15 +265,16 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
                   )}
 
                   {/* Code / Data Preview Accordion Box */}
-                  {(step.output || step.details || step.input_args) && (
+                  {(step.output || step.details || step.input_args || step.function_call) && (
                     <div className="mt-4 rounded-xl bg-brand-kraftDark/30 border border-brand-border/60 p-4 font-mono overflow-x-auto shadow-inner">
                       <div className="text-[11px] uppercase text-brand-roasted/80 font-bold mb-2 flex items-center space-x-1.5">
                         <Terminal className="w-3.5 h-3.5 text-brand-green" />
-                        <span>Execution Metadata</span>
+                        <span>{agentFlow === 'a2a' ? 'Agent Action' : 'Execution Metadata'}</span>
                       </div>
                       <pre className="text-brand-roasted text-sm font-semibold whitespace-pre-wrap leading-relaxed">
                         {JSON.stringify(
                           {
+                            ...(step.function_call ? { function_call: step.function_call } : {}),
                             ...(step.input_args ? { input_args: step.input_args } : {}),
                             ...(step.output ? { output: step.output } : {}),
                             ...(step.details ? { details: step.details } : {}),
@@ -285,13 +301,15 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
           <div>
             <span className="text-xs font-sans font-bold uppercase tracking-widest text-brand-green flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-brand-green" />
-              <span>ReAct Loop Complete &bull; Decision Enforced</span>
+              <span>{agentFlow === 'marketing' ? 'Loop Completed &bull; Content Generated' : agentFlow === 'a2a' ? 'Negotiation Concluded &bull; Order Finalized' : 'ReAct Loop Complete &bull; Decision Enforced'}</span>
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-brand-roasted font-serif mt-2">
               Total End-to-End Latency
             </h2>
             <p className="text-xs font-mono font-medium text-brand-roasted/50 mt-1">
-              Parsed Intent &rarr; CRM Lookup &rarr; ML Inference &rarr; Supabase Refund &rarr; Final Generation
+              {agentFlow === 'marketing' ? 'Agent Search → Loop Assessment → Final Generation' : 
+               agentFlow === 'a2a' ? 'Storefront Generation → Routing → Consumer Generation' :
+               'Parsed Intent → CRM Lookup → ML Inference → Supabase Refund → Final Generation'}
             </p>
           </div>
 

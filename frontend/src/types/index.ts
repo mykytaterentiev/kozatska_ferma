@@ -1,11 +1,14 @@
 export interface TraceStep {
-  step_number: number;
-  type: 'intent_parsing' | 'tool_call' | 'ml_inference' | 'response_generation';
+  step_number?: number;
+  type?: string;
   tool_name?: string;
-  title: string;
-  status: string;
-  latency_ms: number;
-  summary: string;
+  title?: string;
+  status?: string;
+  latency_ms?: number;
+  summary?: string;
+  agent?: string;
+  action?: string;
+  function_call?: string;
   highlight?: boolean;
   badge?: string;
   input_args?: Record<string, any>;
@@ -24,7 +27,8 @@ export interface TraceLog {
 
 export interface AgentTraceRecord {
   id: number;
-  order_id: number;
+  order_id?: number;
+  agent_flow?: 'b2c' | 'a2a' | 'marketing';
   timestamp?: string;
   latency_ms: number;
   trace_log: TraceLog;
