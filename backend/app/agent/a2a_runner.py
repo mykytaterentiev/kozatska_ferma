@@ -74,7 +74,7 @@ async def stream_a2a_negotiation() -> AsyncGenerator[str, None]:
         tools_used = []
 
         try:
-            logger.info(f"[{active_role}] Thinking...")
+            logger.info(f"[bold cyan][{active_role}][/bold cyan] [italic]Thinking...[/italic]")
             async for event in runner.run_async(
                 user_id=user_id, session_id=session_id, new_message=content
             ):
@@ -82,20 +82,21 @@ async def stream_a2a_negotiation() -> AsyncGenerator[str, None]:
                     for part in event.content.parts:
                         if getattr(part, "function_call", None):
                             tools_used.append(part.function_call.name)
-                            logger.info(f"[{active_role}] Executing tool: {part.function_call.name}")
+                            logger.info(f"[bold cyan][{active_role}][/bold cyan] [yellow]Executing tool: {part.function_call.name}[/yellow]")
 
                         func_resp = getattr(part, "function_response", None)
                         if func_resp and func_resp.name == "dispatch_delivery":
                             if hasattr(func_resp.response, "items"):
                                 final_delivery = dict(func_resp.response)
-                                logger.info(f"[{active_role}] Tool dispatch_delivery successful: {final_delivery.get('delivery_id')}")
+                                logger.info(f"[bold cyan][{active_role}][/bold cyan] [green]Tool dispatch_delivery successful: {final_delivery.get('delivery_id')}[/green]")
 
                 if event.is_final_response() and event.content:
                     for part in event.content.parts or []:
                         if part.text:
                             reply_text += part.text
             
-            logger.info(f"[{active_role}] Responded: {reply_text[:100]}...")
+            clean_reply = reply_text.replace('\n', ' ')[:120]
+            logger.info(f"[bold cyan][{active_role}][/bold cyan] Responded: [dim]{clean_reply}...[/dim]")
         except Exception as e:
             logger.error(f"Error during {active_role} turn: {e}")
             error_turn = {

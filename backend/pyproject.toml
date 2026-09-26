@@ -20,6 +20,7 @@ google-genai = "^2.19.0"
 google-adk = "^2.9.2"
 pydantic = "^2.9.0"
 nest-asyncio = "^1.6.0"
+rich = "^15.0.0"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.1.0"
