@@ -46,24 +46,24 @@ def analyze_market_trends(category: str) -> str:
     
     trends = {
         "cheese": (
-            "Тренди (Сир): Зростає попит на крафтові витримані сири з локальними травами (чебрець, розмарин), "
-            "трюфелем та медом. Популярні сирні тарілки для вина. Тренд на еко-пакування. "
-            "Хештеги: #крафтовийсир #українськийсир #сирнанарізка"
+            "Trends (Cheese): Growing demand for craft aged cheeses with local herbs (thyme, rosemary), "
+            "truffle, and honey. Popular cheese plates for wine. Trend for eco-packaging. "
+            "Hashtags: #craftcheese #localcheese #cheeseplate"
         ),
         "meat": (
-            "Тренди (М'ясо): Шалений попит на готові до запікання BBQ-набори, преміальну мармурову яловичину "
-            "сухої витримки та сиров'ялені ковбаси за старовинними рецептами. "
-            "Хештеги: #м'ясозапоріжжя #bbqua #стейкукраїна"
+            "Trends (Meat): Huge demand for ready-to-bake BBQ kits, premium dry-aged marbled beef, "
+            "and dry-cured sausages using traditional recipes. "
+            "Hashtags: #meatzaporizhzhia #bbqua #steakukraine"
         ),
         "bbq": (
-            "Тренди (Пікнік/BBQ): Фокус на сімейний відпочинок на природі. Покупці шукають готові 'бокси для пікніка', "
-            "щоб не витрачати час на маринування. Важлива швидка доставка до вихідних."
-            "Хештеги: #пікнік #шашлик #відпочинокнаприроді"
+            "Trends (Picnic/BBQ): Focus on family outdoor recreation. Buyers are looking for ready-made 'picnic boxes' "
+            "to save time on marinating. Fast delivery by the weekend is important."
+            "Hashtags: #picnic #bbq #outdoorrecreation"
         )
     }
     
     return trends.get(category, (
-        "Тренди (Загальні): 'Farm-to-table' (з ферми на стіл). Підтримка локальних українських виробників. "
-        "Прозорість виробництва (люди хочуть бачити, як це робиться). Емоційний маркетинг, що нагадує про дім та затишок."
-        "Хештеги: #локальнийвиробник #купуйукраїнське #козацькаферма"
+        "Trends (General): 'Farm-to-table'. Supporting local Ukrainian producers. "
+        "Production transparency (people want to see how it's made). Emotional marketing that reminds of home and coziness."
+        "Hashtags: #localproducer #buyukrainian #kozatskaferma"
     ))
