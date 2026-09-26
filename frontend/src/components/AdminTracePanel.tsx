@@ -163,7 +163,7 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger = 0
               {agentFlow === 'marketing' ? 'DuckDuckGo API' : agentFlow === 'a2a' ? 'Strict Persona' : 'RandomForest'}
             </p>
             <span className="text-[11px] font-mono font-bold text-brand-roasted/70">
-              {agentFlow === 'marketing' ? 'Live Web Search' : agentFlow === 'a2a' ? 'Store vs Consumer' : 'Scikit-Learn (88% Risk)'}
+              {agentFlow === 'marketing' ? 'Live Web Search' : agentFlow === 'a2a' ? 'Store vs Consumer' : 'Scikit-Learn Random Forest'}
             </span>
           </div>
 
@@ -203,10 +203,10 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger = 0
                 mlProb = step.output.churn_prob;
                 mlAction = step.output.action || 'RECOVER';
               } else if (typeof step.output.result === 'string') {
-                const probMatch = step.output.result.match(/Churn Probability:\s*(\d+)%/i);
+                const probMatch = step.output.result.match(/Churn Probability:\**\s*(\d+)%/i);
                 if (probMatch) mlProb = parseInt(probMatch[1], 10) / 100;
                 
-                const actionMatch = step.output.result.match(/Recommended Action:\s*([A-Z_]+)/i) || step.output.result.match(/Action:\s*([A-Z_]+)/i);
+                const actionMatch = step.output.result.match(/Recommended Action:\**\s*([A-Z_]+)/i) || step.output.result.match(/Action:\**\s*([A-Z_]+)/i);
                 if (actionMatch) mlAction = actionMatch[1];
               }
             }
