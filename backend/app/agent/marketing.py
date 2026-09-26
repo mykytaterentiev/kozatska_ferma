@@ -2,6 +2,7 @@
 
 from google.adk.agents import LoopAgent, LlmAgent, SequentialAgent
 from google.adk.tools.tool_context import ToolContext
+from google.adk.agents.callback_context import CallbackContext
 from app.agent.agent import _base_model
 from app.tools.a2a_tools import check_inventory
 from app.tools.marketing import analyze_market_trends, search_web
@@ -11,6 +12,13 @@ def complete_research(tool_context: ToolContext):
     tool_context.actions.escalate = True
     tool_context.actions.skip_summarization = True
     return {}
+
+def initialize_research_state(callback_context: CallbackContext):
+    """Ensure state variables exist before the pipeline starts to prevent context variable errors."""
+    if 'research_data' not in callback_context.state:
+        callback_context.state['research_data'] = "No research gathered yet."
+    if 'research_criticism' not in callback_context.state:
+        callback_context.state['research_criticism'] = "Initial run. Please gather basic facts."
 
 # 1. Researcher: Gathers info using tools
 researcher_agent = LlmAgent(
@@ -81,6 +89,7 @@ writer_agent = LlmAgent(
 marketing_agent = SequentialAgent(
     name="marketing_copilot",
     description="Iterative research and writing pipeline using a LoopAgent.",
-    sub_agents=[research_loop, writer_agent]
+    sub_agents=[research_loop, writer_agent],
+    before_agent_callback=initialize_research_state
 )
 
