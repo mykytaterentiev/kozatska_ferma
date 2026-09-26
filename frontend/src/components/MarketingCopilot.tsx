@@ -41,7 +41,7 @@ export const MarketingCopilot: React.FC = () => {
       }
     } catch (error) {
       console.error(error);
-      setResponse(prev => prev + '\n\n[Помилка з\'єднання]');
+      setResponse(prev => prev + '\n\n[Connection Error]');
     } finally {
       setLoading(false);
       setPrompt('');
@@ -57,7 +57,7 @@ export const MarketingCopilot: React.FC = () => {
           <span className="text-2xl">🌾</span>
           <div>
             <h2 className="font-bold text-lg tracking-wide uppercase">Marketing Co-Pilot</h2>
-            <p className="text-sm opacity-80">ТМ «Козацька ферма»</p>
+            <p className="text-sm opacity-80">TM "Kozatska Ferma"</p>
           </div>
         </div>
 
@@ -67,7 +67,7 @@ export const MarketingCopilot: React.FC = () => {
             <div className="h-full flex flex-col items-center justify-center text-brand-roasted/50 text-center space-y-4">
               <span className="text-5xl opacity-50">✍️</span>
               <p className="max-w-md">
-                Я ваш маркетинговий асистент. Напишіть мені, що ви хочете створити: пост для Instagram, сценарій для Reels, чи промпт для фуд-фотографії у Midjourney.
+                I am your marketing assistant. Tell me what you want to create: an Instagram post, a Reels script, or a Midjourney food photography prompt.
               </p>
             </div>
           )}
@@ -83,7 +83,7 @@ export const MarketingCopilot: React.FC = () => {
           
           {loading && !response && (
             <div className="flex items-center gap-2 text-brand-roasted/70 p-4 font-medium animate-pulse">
-              <span>Генерую контент у фірмовому стилі</span>
+              <span>Generating content in brand style</span>
               <span className="animate-bounce">.</span>
               <span className="animate-bounce delay-100">.</span>
               <span className="animate-bounce delay-200">.</span>
@@ -98,7 +98,7 @@ export const MarketingCopilot: React.FC = () => {
               type="text"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Наприклад: Напиши пост про сезон шашликів та наш новий сир..."
+              placeholder="For example: Write a post about BBQ season and our new cheese..."
               className="flex-1 rounded-lg border-brand-roasted/20 bg-brand-kraftLight/30 focus:bg-white focus:ring-brand-roasted focus:border-brand-roasted transition-colors p-3"
               disabled={loading}
             />
@@ -107,7 +107,7 @@ export const MarketingCopilot: React.FC = () => {
               disabled={loading || !prompt.trim()}
               className="px-6 py-3 bg-brand-terracotta hover:bg-red-700 text-white font-medium tracking-wide uppercase text-sm rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              Створити
+              Generate
             </button>
           </form>
         </div>
