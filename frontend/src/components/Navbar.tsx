@@ -93,11 +93,6 @@ export const Navbar: FC<NavbarProps> = ({
 
         {/* Action Bar */}
         <div className="flex items-center space-x-3">
-          <div className="hidden lg:flex items-center space-x-2 text-xs font-mono font-bold px-3 py-1.5 rounded-full border border-brand-border text-brand-roasted bg-white shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-brand-green shadow-[0_0_4px_rgba(116,140,89,0.5)]"></span>
-            <span>usr_101 (Ivan Z.)</span>
-          </div>
-
           <button
             onClick={onResetDemo}
             disabled={isResetting}
