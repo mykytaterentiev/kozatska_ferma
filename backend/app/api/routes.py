@@ -10,6 +10,7 @@ from app.agent.a2a_runner import stream_a2a_negotiation
 from app.api.schemas import ChatRequest, ChatResponse
 from app.core.supabase import get_supabase
 from google.genai import types
+import uuid
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from app.agent.marketing import marketing_agent
@@ -17,19 +18,17 @@ from app.agent.marketing import marketing_agent
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["agent"])
 
-marketing_session_service = InMemorySessionService()
 
 @router.post("/marketing/chat")
 async def marketing_chat_endpoint(request: ChatRequest):
     """Streaming endpoint for the internal Marketing Co-Pilot."""
     user_id = "marketing_team"
-    session_id = "mktg_session_live"
+    session_id = f"mktg_session_{uuid.uuid4().hex[:8]}"
     
-    # Ensure session exists
-    try:
-        await marketing_session_service.create_session("fermaagent", user_id, session_id)
-    except Exception:
-        pass # Session already exists
+    marketing_session_service = InMemorySessionService()
+    await marketing_session_service.create_session(
+        app_name="fermaagent", user_id=user_id, session_id=session_id
+    )
 
     runner = Runner(
         agent=marketing_agent,
