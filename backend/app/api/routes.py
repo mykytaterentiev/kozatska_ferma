@@ -108,18 +108,34 @@ async def chat_interaction(req: ChatRequest) -> ChatResponse:
     )
 
 
-@router.get("/traces/{user_id}")
-def get_traces_for_user(user_id: str) -> Dict[str, Any]:
-    """Fetch the latest agent execution trace for Admin Console visualization."""
+@router.get("/traces/list")
+def list_traces_for_user() -> list:
+    """Fetch a history of all agent traces for the dropdown selector."""
     try:
         supabase = get_supabase()
         res = (
             supabase.table("agent_traces")
-            .select("*")
+            .select("id, session_id, agent_name, created_at")
             .order("id", desc=True)
-            .limit(1)
+            .limit(20)
             .execute()
         )
+        return res.data if res.data else []
+    except Exception as e:
+        logger.error(f"Error fetching trace list: {e}")
+        return []
+
+@router.get("/traces/{user_id}")
+def get_traces_for_user(user_id: str, trace_id: int = None) -> Dict[str, Any]:
+    """Fetch the latest agent execution trace for Admin Console visualization."""
+    try:
+        supabase = get_supabase()
+        query = supabase.table("agent_traces").select("*")
+        
+        if trace_id:
+            res = query.eq("id", trace_id).execute()
+        else:
+            res = query.order("id", desc=True).limit(1).execute()
 
         if not res.data:
             return {

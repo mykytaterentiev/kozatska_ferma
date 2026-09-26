@@ -19,17 +19,35 @@ interface AdminTracePanelProps {
 
 export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) => {
   const [traceRecord, setTraceRecord] = useState<AgentTraceRecord | null>(null);
+  const [traceList, setTraceList] = useState<{id: number, session_id: string, agent_name: string, created_at: string}[]>([]);
+  const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTrace = async () => {
+  const fetchTraceList = async () => {
+    try {
+      const res = await fetch('/api/traces/list');
+      if (res.ok) {
+        const data = await res.json();
+        setTraceList(data);
+      }
+    } catch (err) {
+      console.error('Failed to load trace list:', err);
+    }
+  };
+
+  const fetchTrace = async (traceId?: number | null) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/traces/usr_101');
+      let url = '/api/traces/usr_101';
+      if (traceId) url += `?trace_id=${traceId}`;
+      
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP error ${res.status}`);
       const data: AgentTraceRecord = await res.json();
       setTraceRecord(data);
+      if (data.id) setSelectedTraceId(data.id);
     } catch (err: any) {
       console.error('Failed to load trace:', err);
       setError(err.message || 'Could not fetch execution trace.');
@@ -39,7 +57,8 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
   };
 
   useEffect(() => {
-    fetchTrace();
+    fetchTraceList();
+    fetchTrace(selectedTraceId);
   }, [onRefreshTrigger]);
 
   const steps: TraceStep[] = traceRecord?.trace_log?.steps || [];
@@ -51,14 +70,32 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
       <div className="bg-brand-kraft/60 backdrop-blur-md border border-brand-border rounded-3xl p-6 sm:p-8 shadow-sm mb-8 relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-brand-border/60 pb-6 mb-6">
           <div>
-            <div className="flex items-center space-x-3 mb-2">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
               <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-wider bg-brand-terracotta/10 text-brand-terracotta border border-brand-terracotta/20">
                 <span className="w-2 h-2 rounded-full bg-brand-terracotta animate-pulse"></span>
                 <span>Autonomous ReAct Trace</span>
               </span>
-              <span className="text-xs font-mono text-brand-roasted/60 font-medium">
-                Session: usr_101 (Ivan Z.)
-              </span>
+              
+              {/* Dropdown for Historical Runs */}
+              <select 
+                value={selectedTraceId || ''} 
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) {
+                    const id = parseInt(val, 10);
+                    setSelectedTraceId(id);
+                    fetchTrace(id);
+                  }
+                }}
+                className="text-xs font-mono bg-white border border-brand-border text-brand-roasted rounded-lg px-2 py-1 focus:ring-1 focus:ring-brand-roasted focus:outline-none cursor-pointer"
+              >
+                <option value="" disabled>Select historical run...</option>
+                {traceList.map(t => (
+                  <option key={t.id} value={t.id}>
+                    Run #{t.id} • {new Date(t.created_at).toLocaleTimeString()}
+                  </option>
+                ))}
+              </select>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-brand-roasted">
               AGENT EXECUTION TRACE
@@ -69,7 +106,10 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger }) 
           </div>
 
           <button
-            onClick={fetchTrace}
+            onClick={() => {
+                fetchTraceList();
+                fetchTrace(); // Fetch latest without ID to reset
+            }}
             disabled={loading}
             className="self-start md:self-auto flex items-center space-x-2 px-5 py-2.5 rounded-full bg-brand-roasted hover:bg-brand-roasted/90 text-white font-sans font-semibold text-sm transition-all shadow-sm disabled:opacity-50"
           >
