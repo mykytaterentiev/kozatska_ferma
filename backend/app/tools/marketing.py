@@ -17,7 +17,7 @@ def search_web(query: str) -> str:
     """
     logger.info(f"[bold magenta]🌍 Web Search:[/bold magenta] [dim]Querying: '{query}'[/dim]")
     try:
-        from duckduckgo_search import DDGS
+        from ddgs import DDGS
         with DDGS() as ddgs:
             results = list(ddgs.text(query, max_results=4))
         

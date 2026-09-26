@@ -1,4 +1,5 @@
 """Marketing Co-Pilot agent definition for Kozatska Ferma."""
+from datetime import datetime
 
 from google.adk.agents import LoopAgent, LlmAgent, SequentialAgent
 from google.adk.tools.tool_context import ToolContext
@@ -20,11 +21,17 @@ def initialize_research_state(callback_context: CallbackContext):
     if 'research_criticism' not in callback_context.state:
         callback_context.state['research_criticism'] = "Initial run. Please gather basic facts."
 
+_current_date = datetime.now().strftime("%B %d, %Y")
+_current_year = datetime.now().year
+
 # 1. Researcher: Gathers info using tools
 researcher_agent = LlmAgent(
     name="ResearcherAgent",
     model=_base_model,
-    instruction="""You are a researcher for the marketing department. Your task is to gather as much real-world data as possible to answer the user's request.
+    instruction=f"""You are a researcher for the marketing department. Your task is to gather as much real-world data as possible to answer the user's request.
+    
+    IMPORTANT CONTEXT: 
+    Today's date is {_current_date}. You MUST use the current year ({_current_year}) in any web search queries to get up-to-date information.
     
     PREVIOUS DATA:
     {{research_data}}
@@ -44,7 +51,10 @@ researcher_agent = LlmAgent(
 assessor_agent = LlmAgent(
     name="AssessorAgent",
     model=_base_model,
-    instruction="""You are the lead analyst. Your task is to check if enough data has been gathered to fulfill the user's request.
+    instruction=f"""You are the lead analyst. Your task is to check if enough data has been gathered to fulfill the user's request.
+    
+    IMPORTANT CONTEXT:
+    Today's date is {_current_date}. Ensure the gathered data is relevant for the year {_current_year}.
     
     CURRENT GATHERED DATA:
     {{research_data}}

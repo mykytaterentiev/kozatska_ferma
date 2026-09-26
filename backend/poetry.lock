@@ -495,6 +495,28 @@ cffi = {version = ">=2.0.0", markers = "platform_python_implementation != \"PyPy
 ssh = ["bcrypt (>=3.1.5)"]
 
 [[package]]
+name = "ddgs"
+version = "9.16.0"
+description = "Dux Distributed Global Search. A metasearch library that aggregates results from diverse web search services."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "ddgs-9.16.0-py3-none-any.whl", hash = "sha256:175d9198c958a263f51a06a54368ba0b41294942c0cd29f4aa71be03dbcd5f4a"},
+    {file = "ddgs-9.16.0.tar.gz", hash = "sha256:161ca8e78ea08d40cd3f83fb12279b49322ffb342d981368bfa39bed9847d874"},
+]
+
+[package.dependencies]
+click = ">=8.1.8"
+lxml = ">=4.9.4"
+primp = ">=1.3.1"
+
+[package.extras]
+api = ["fastapi (>=0.135.1)", "uvicorn[standard] (>=0.41.0)"]
+dev = ["lxml-stubs", "mypy (>=1.17.1)", "prek", "pytest (>=8.4.1)", "pytest-trio", "ruff (>=0.13.0)", "types-PyYAML", "types-Pygments", "types-pexpect", "types-ujson"]
+mcp = ["mcp (>=2.0)"]
+
+[[package]]
 name = "deprecation"
 version = "2.1.0"
 description = "A library to handle automated deprecations"
@@ -520,26 +542,6 @@ files = [
     {file = "distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2"},
     {file = "distro-1.9.0.tar.gz", hash = "sha256:2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed"},
 ]
-
-[[package]]
-name = "duckduckgo-search"
-version = "8.1.1"
-description = "Search for words, documents, images, news, maps and text translation using the DuckDuckGo.com search engine."
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "duckduckgo_search-8.1.1-py3-none-any.whl", hash = "sha256:f48adbb06626ee05918f7e0cef3a45639e9939805c4fc179e68c48a12f1b5062"},
-    {file = "duckduckgo_search-8.1.1.tar.gz", hash = "sha256:9da91c9eb26a17e016ea1da26235d40404b46b0565ea86d75a9f78cc9441f935"},
-]
-
-[package.dependencies]
-click = ">=8.1.8"
-lxml = ">=5.3.0"
-primp = ">=0.15.0"
-
-[package.extras]
-dev = ["mypy (>=1.14.1)", "pytest (>=8.3.4)", "pytest-dependency (>=0.6.0)", "ruff (>=0.9.2)"]
 
 [[package]]
 name = "fastapi"
@@ -3268,4 +3270,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "2465c2064d3956604620e0172a4b26c22bbcf8aed8ae32d6f295b15f7fa5d123"
+content-hash = "3e7ef28dd85deae0a9d64db2720594f522a7a2fe2d9d3f1fd83cf2536193bd88"
