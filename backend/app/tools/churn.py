@@ -1,8 +1,11 @@
 """Churn risk prediction tool for Google ADK Agent."""
 
+import logging
 from typing import Any, Dict
 from app.core.supabase import get_supabase
 from app.ml.client import predict_churn
+
+logger = logging.getLogger(__name__)
 
 
 def predict_churn_risk(user_id: str) -> Dict[str, Any]:
@@ -14,6 +17,7 @@ def predict_churn_risk(user_id: str) -> Dict[str, Any]:
     Returns:
         dict: Churn probability, LTV, risk classification, and recommended action.
     """
+    logger.info(f"[bold magenta]🔬 ML Specialist:[/bold magenta] [white]Evaluating risk profile for {user_id}[/white]")
     supabase = get_supabase()
 
     cust_res = (
@@ -33,6 +37,8 @@ def predict_churn_risk(user_id: str) -> Dict[str, Any]:
         support_tickets=tickets,
         days_since_order=days,
     )
+    
+    logger.info(f"[bold magenta]🔬 ML Specialist:[/bold magenta] [red]Calculated Churn Probability: {prediction['churn_prob']:.2%} ({prediction['risk_level']})[/red]")
 
     return {
         "status": "success",

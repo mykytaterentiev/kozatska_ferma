@@ -109,20 +109,24 @@ async def _run_with_adk_runner(
     step_counter += 1
     current_step_start = time.perf_counter()
 
-    logger.info(f"Starting ADK Runner for user {user_id}")
+    logger.info(f"[bold magenta]👤 User ({user_id}):[/bold magenta] [white]{user_message}[/white]")
+    logger.info("[bold cyan]🤖 Coordinator:[/bold cyan] [italic]Thinking...[/italic]")
+    
     async for event in runner.run_async(
         user_id=user_id, session_id=session_id, new_message=content
     ):
         if event.content and getattr(event.content, "parts", None):
             for part in event.content.parts:
                 if getattr(part, "function_call", None):
-                    logger.info(f"ADK Tool Call: {part.function_call.name}")
+                    tool_name = part.function_call.name
+                    logger.info(f"[bold cyan]🤖 Coordinator:[/bold cyan] [yellow]Delegating to Specialist: {tool_name}[/yellow]")
                     step_counter = _process_tool_call(
                         part, step_counter, current_step_start, authentic_steps
                     )
                     current_step_start = time.perf_counter()
                 elif getattr(part, "function_response", None):
-                    logger.info(f"ADK Tool Response: {part.function_response.name}")
+                    tool_name = part.function_response.name
+                    logger.info(f"[bold cyan]🤖 Coordinator:[/bold cyan] [green]Received Specialist Report: {tool_name}[/green]")
                     _process_tool_response(
                         part, current_step_start, authentic_steps
                     )
@@ -134,6 +138,9 @@ async def _run_with_adk_runner(
                     final_text += part.text
 
     total_latency = int((time.perf_counter() - start_time) * 1000)
+
+    clean_reply = final_text.replace('\n', ' ')[:150]
+    logger.info(f"[bold cyan]🤖 Coordinator:[/bold cyan] Synthesized Response in [bold]{total_latency}ms[/bold]: [dim]{clean_reply}...[/dim]")
 
     authentic_steps.append({
         "step_number": step_counter,
