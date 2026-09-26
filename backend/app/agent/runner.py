@@ -88,8 +88,10 @@ async def _run_with_adk_runner(
         session_service=session_service,
     )
 
+    contextual_message = f"[System Context: The current customer speaking to you has user_id='{user_id}']\n\n{user_message}"
+
     content = types.Content(
-        role="user", parts=[types.Part.from_text(text=user_message)]
+        role="user", parts=[types.Part.from_text(text=contextual_message)]
     )
 
     final_text = ""
