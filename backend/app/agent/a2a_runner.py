@@ -159,6 +159,7 @@ async def stream_a2a_negotiation() -> AsyncGenerator[str, None]:
         
         supabase.table("agent_traces").insert({
             "order_id": order_id,
+            "agent_flow": "a2a",
             "latency_ms": latency,
             "trace_log": trace_payload,
         }).execute()

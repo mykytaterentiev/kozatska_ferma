@@ -193,6 +193,7 @@ def _persist_trace(
             .insert(
                 {
                     "order_id": order_id,
+                    "agent_flow": "b2c",
                     "latency_ms": latency,
                     "trace_log": trace_payload,
                 }

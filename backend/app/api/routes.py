@@ -41,6 +41,11 @@ async def marketing_chat_endpoint(request: ChatRequest):
         logger.info(f"[bold magenta]Marketing User:[/bold magenta] [white]{request.message}[/white]")
         logger.info("[bold cyan]Marketing Co-Pilot:[/bold cyan] [italic]Thinking...[/italic]")
         
+        start_time = time.perf_counter()
+        trace_steps = []
+        final_reply = ""
+        step_counter = 1
+        
         try:
             async for event in runner.run_async(user_id=user_id, session_id=session_id, new_message=content):
                 if event.content and getattr(event.content, "parts", None):
@@ -48,6 +53,20 @@ async def marketing_chat_endpoint(request: ChatRequest):
                         if getattr(part, "function_call", None):
                             tool_name = part.function_call.name
                             logger.info(f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [yellow]Executing tool: {tool_name}[/yellow]")
+                            
+                            args = dict(part.function_call.args) if getattr(part.function_call, "args", None) else {}
+                            trace_steps.append({
+                                "step_number": step_counter,
+                                "type": "tool_call",
+                                "tool_name": tool_name,
+                                "title": "Information Research",
+                                "status": "executed",
+                                "latency_ms": int((time.perf_counter() - start_time) * 1000),
+                                "summary": f"Researcher triggered {tool_name}",
+                                "input_args": args
+                            })
+                            step_counter += 1
+                            
                         elif getattr(part, "function_response", None):
                             tool_name = part.function_response.name
                             logger.info(f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [green]Received Tool Report: {tool_name}[/green]")
@@ -55,11 +74,43 @@ async def marketing_chat_endpoint(request: ChatRequest):
                 if event.is_final_response() and event.content:
                     for part in event.content.parts or []:
                         if part.text:
+                            final_reply += part.text
                             yield part.text
+                            
             logger.info("[bold cyan]Marketing Co-Pilot:[/bold cyan] [dim]Finished streaming response.[/dim]")
+            
+            # Persist trace
+            latency = int((time.perf_counter() - start_time) * 1000)
+            trace_steps.append({
+                "step_number": step_counter,
+                "type": "response_generation",
+                "title": "Synthesis",
+                "status": "completed",
+                "latency_ms": latency,
+                "summary": "WriterAgent generated final response",
+                "output": {"length": len(final_reply)}
+            })
+            
+            trace_payload = {
+                "user_id": user_id,
+                "user_prompt": request.message,
+                "agent_response": final_reply,
+                "total_latency_ms": latency,
+                "steps": trace_steps
+            }
+            
+            try:
+                get_supabase().table("agent_traces").insert({
+                    "agent_flow": "marketing",
+                    "latency_ms": latency,
+                    "trace_log": trace_payload
+                }).execute()
+            except Exception as e:
+                logger.warning(f"Failed to persist Marketing trace: {e}")
+                
         except Exception as e:
             logger.error(f"Marketing Agent Error: {e}")
-            yield f"\n[Системна помилка]: {e}"
+            yield f"\n[System Error]: {e}"
 
     return StreamingResponse(generate_marketing_stream(), media_type="text/plain")
 
