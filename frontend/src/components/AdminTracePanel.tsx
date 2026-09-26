@@ -196,6 +196,21 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger = 0
             const isResolution = step.type === 'tool_call' && step.tool_name === 'execute_resolution';
             const isMarketingSearch = agentFlow === 'marketing' && step.tool_name === 'search_web';
 
+            let mlProb = 0.88;
+            let mlAction = 'RECOVER';
+            if (isMLStep && step.output) {
+              if (step.output.churn_prob !== undefined) {
+                mlProb = step.output.churn_prob;
+                mlAction = step.output.action || 'RECOVER';
+              } else if (typeof step.output.result === 'string') {
+                const probMatch = step.output.result.match(/Churn Probability:\s*(\d+)%/i);
+                if (probMatch) mlProb = parseInt(probMatch[1], 10) / 100;
+                
+                const actionMatch = step.output.result.match(/Recommended Action:\s*([A-Z_]+)/i) || step.output.result.match(/Action:\s*([A-Z_]+)/i);
+                if (actionMatch) mlAction = actionMatch[1];
+              }
+            }
+
             return (
               <motion.div
                 key={step.step_number || index}
@@ -249,42 +264,42 @@ export const AdminTracePanel: FC<AdminTracePanelProps> = ({ onRefreshTrigger = 0
                   {/* HIGHLIGHT THIS: Glowing badge for ML Churn Step (B2C Only) */}
                   {isMLStep && (
                     <div className={`my-5 p-5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm ${
-                      (step.output?.churn_prob || 0.88) > 0.6 
+                      mlProb > 0.6 
                         ? 'bg-amber-100/50 border-amber-200' 
-                        : (step.output?.churn_prob || 0) < 0.3 
+                        : mlProb < 0.3 
                           ? 'bg-emerald-50/50 border-emerald-200' 
                           : 'bg-yellow-50/50 border-yellow-200'
                     }`}>
                       <div className="flex items-center space-x-4">
                         <div className={`h-12 w-12 rounded-full text-white flex items-center justify-center font-bold font-mono text-lg shrink-0 shadow-sm ${
-                          (step.output?.churn_prob || 0.88) > 0.6 
+                          mlProb > 0.6 
                             ? 'bg-brand-terracotta' 
-                            : (step.output?.churn_prob || 0) < 0.3 
+                            : mlProb < 0.3 
                               ? 'bg-brand-green' 
                               : 'bg-yellow-600'
                         }`}>
-                          {Math.round((step.output?.churn_prob || 0.88) * 100)}%
+                          {Math.round(mlProb * 100)}%
                         </div>
                         <div>
                           <div className="text-brand-roasted/60 font-sans font-bold text-xs uppercase tracking-wider mb-0.5">
                             ML Model Output &bull; Scikit-Learn Random Forest
                           </div>
                           <div className="text-brand-roasted font-bold text-lg sm:text-xl font-serif">
-                            {Math.round((step.output?.churn_prob || 0.88) * 100)}% Churn Risk &rarr; Action: {step.output?.action ? step.output.action.substring(0, 15).toUpperCase() : 'RECOVER'}
+                            {Math.round(mlProb * 100)}% Churn Risk &rarr; Action: {mlAction.substring(0, 15).toUpperCase()}
                           </div>
                         </div>
                       </div>
 
                       <span className={`px-4 py-2 rounded-full border font-sans font-bold text-xs uppercase tracking-wider shrink-0 ${
-                        (step.output?.churn_prob || 0.88) > 0.6 
+                        mlProb > 0.6 
                           ? 'bg-brand-terracotta/10 text-brand-terracotta border-brand-terracotta/20' 
-                          : (step.output?.churn_prob || 0) < 0.3 
+                          : mlProb < 0.3 
                             ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
                             : 'bg-yellow-100 text-yellow-800 border-yellow-300'
                       }`}>
-                        {(step.output?.churn_prob || 0.88) > 0.6 
+                        {mlProb > 0.6 
                           ? 'CRITICAL THRESHOLD EXCEEDED' 
-                          : (step.output?.churn_prob || 0) < 0.3 
+                          : mlProb < 0.3 
                             ? 'LOW RISK DETECTED' 
                             : 'VIP STATUS'}
                       </span>
