@@ -120,7 +120,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-[#FFFCF8] relative">
+      <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-brand-kraft relative">
         <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjMDAwIiBmaWxsLW9wYWNpdHk9IjEiLz4KPHBhdGggZD0iTTAgMEw4IDhaTTAgOEw4IDBaIiBzdHJva2U9IiMwMDAiIHN0cm9rZS1vcGFjaXR5PSIwLjAyIiBzdHJva2Utd2lkdGg9IjEiLz4KPC9zdmc+')]"></div>
 
         <div className="relative z-10 space-y-4">
@@ -251,7 +251,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
             onChange={(e) => setInput(e.target.value)}
             placeholder="Write your message..."
             disabled={isLoading}
-            className="flex-1 bg-[#FFFCF8] text-brand-roasted font-sans font-medium px-4 py-3 rounded-2xl border border-brand-border focus:border-brand-green focus:ring-1 focus:ring-brand-green/20 focus:outline-none placeholder:text-brand-roasted/50 transition-all shadow-sm"
+            className="flex-1 bg-brand-kraft text-brand-roasted font-sans font-medium px-4 py-3 rounded-2xl border border-brand-border focus:border-brand-green focus:ring-1 focus:ring-brand-green/20 focus:outline-none placeholder:text-brand-roasted/50 transition-all shadow-sm"
           />
 
           <button
