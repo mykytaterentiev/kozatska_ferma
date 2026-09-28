@@ -1,10 +1,9 @@
 """Agent execution runner, event listener, and trace persistence engine."""
 
-import asyncio
+import json
 import logging
 import time
 from typing import Any, Dict, List, Tuple
-import uuid
 
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
@@ -18,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 # Global session service to maintain conversation history across turns
 global_session_service = InMemorySessionService()
+
 
 def _process_tool_call(
     part: Any,
@@ -123,9 +123,10 @@ async def _run_with_adk_runner(
     step_counter += 1
     current_step_start = time.perf_counter()
 
-    logger.info(f"[bold magenta]User ({user_id}):[/bold magenta] [white]{user_message}[/white]")
+    logger.info(
+        f"[bold magenta]User ({user_id}):[/bold magenta] [white]{user_message}[/white]")
     logger.info("[bold cyan]Coordinator:[/bold cyan] [italic]Thinking...[/italic]")
-    
+
     async for event in runner.run_async(
         user_id=user_id, session_id=session_id, new_message=content
     ):
@@ -133,14 +134,16 @@ async def _run_with_adk_runner(
             for part in event.content.parts:
                 if getattr(part, "function_call", None):
                     tool_name = part.function_call.name
-                    logger.info(f"[bold cyan]Coordinator:[/bold cyan] [yellow]Delegating to Specialist: {tool_name}[/yellow]")
+                    logger.info(
+                        f"[bold cyan]Coordinator:[/bold cyan] [yellow]Delegating to Specialist: {tool_name}[/yellow]")
                     step_counter = _process_tool_call(
                         part, step_counter, current_step_start, authentic_steps
                     )
                     current_step_start = time.perf_counter()
                 elif getattr(part, "function_response", None):
                     tool_name = part.function_response.name
-                    logger.info(f"[bold cyan]Coordinator:[/bold cyan] [green]Received Specialist Report: {tool_name}[/green]")
+                    logger.info(
+                        f"[bold cyan]Coordinator:[/bold cyan] [green]Received Specialist Report: {tool_name}[/green]")
                     _process_tool_response(
                         part, current_step_start, authentic_steps
                     )
@@ -154,7 +157,8 @@ async def _run_with_adk_runner(
     total_latency = int((time.perf_counter() - start_time) * 1000)
 
     clean_reply = final_text.replace('\n', ' ')[:150]
-    logger.info(f"[bold cyan]Coordinator:[/bold cyan] Synthesized Response in [bold]{total_latency}ms[/bold]: [dim]{clean_reply}...[/dim]")
+    logger.info(
+        f"[bold cyan]Coordinator:[/bold cyan] Synthesized Response in [bold]{total_latency}ms[/bold]: [dim]{clean_reply}...[/dim]")
 
     authentic_steps.append({
         "step_number": step_counter,
@@ -209,15 +213,16 @@ def _persist_trace(
         if res.data:
             existing = res.data[0]
             existing_log = existing["trace_log"]
-            
+
             # Re-number new steps based on existing length
             last_step_num = existing_log["steps"][-1]["step_number"] if existing_log["steps"] else 0
             for s in steps:
                 s["step_number"] = last_step_num + 1
                 last_step_num += 1
-                
+
             existing_log["steps"].extend(steps)
-            existing_log["total_latency_ms"] = existing_log.get("total_latency_ms", 0) + latency
+            existing_log["total_latency_ms"] = existing_log.get(
+                "total_latency_ms", 0) + latency
             existing_log["user_prompt"] = user_message
             existing_log["agent_response"] = reply
 
@@ -288,7 +293,7 @@ async def execute_agent_loop(
     trace_id = _persist_trace(user_id, order_id, user_message, reply, latency, steps)
 
     return reply, order_id, latency, trace_id
-import json
+
 
 async def execute_b2c_stream(user_message: str, user_id: str = "usr_101"):
     """Execute complete agent turn, stream NDJSON events, record trace in Supabase."""
@@ -351,15 +356,17 @@ async def execute_b2c_stream(user_message: str, user_id: str = "usr_101"):
                         tool_name = part.function_call.name
                         ui_name = tool_name.replace('_', ' ').title()
                         yield json.dumps({"type": "status", "text": f"{ui_name}..."}) + "\n"
-                        
-                        logger.info(f"[bold cyan]Coordinator:[/bold cyan] [yellow]Delegating to Specialist: {tool_name}[/yellow]")
+
+                        logger.info(
+                            f"[bold cyan]Coordinator:[/bold cyan] [yellow]Delegating to Specialist: {tool_name}[/yellow]")
                         step_counter = _process_tool_call(
                             part, step_counter, current_step_start, authentic_steps
                         )
                         current_step_start = time.perf_counter()
                     elif getattr(part, "function_response", None):
                         tool_name = part.function_response.name
-                        logger.info(f"[bold cyan]Coordinator:[/bold cyan] [green]Received Specialist Report: {tool_name}[/green]")
+                        logger.info(
+                            f"[bold cyan]Coordinator:[/bold cyan] [green]Received Specialist Report: {tool_name}[/green]")
                         _process_tool_response(
                             part, current_step_start, authentic_steps
                         )
@@ -370,7 +377,7 @@ async def execute_b2c_stream(user_message: str, user_id: str = "usr_101"):
                     if part.text:
                         final_text += part.text
                         yield json.dumps({"type": "token", "text": part.text}) + "\n"
-                        
+
     except Exception as exc:
         logger.error(f"ADK Runner exception: {exc}")
         yield json.dumps({"type": "token", "text": f"\nSystem Error: {str(exc)}"}) + "\n"
@@ -387,6 +394,12 @@ async def execute_b2c_stream(user_message: str, user_id: str = "usr_101"):
     })
 
     order_id = _extract_order_id(authentic_steps)
-    trace_id = _persist_trace(user_id, order_id, user_message, final_text, total_latency, authentic_steps)
+    trace_id = _persist_trace(
+        user_id,
+        order_id,
+        user_message,
+        final_text,
+        total_latency,
+        authentic_steps)
 
     yield json.dumps({"type": "metadata", "order_id": order_id, "trace_id": trace_id}) + "\n"

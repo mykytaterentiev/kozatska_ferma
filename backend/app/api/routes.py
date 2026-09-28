@@ -1,14 +1,14 @@
 """FastAPI route handlers for chat, tracing, and demo management."""
 
+from app.agent.runner import execute_b2c_stream
 import time
 import logging
 from typing import Any, Dict
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from app.agent.runner import execute_agent_loop
 from app.agent.a2a_runner import stream_a2a_negotiation
-from app.api.schemas import ChatRequest, ChatResponse
+from app.api.schemas import ChatRequest
 from app.core.supabase import get_supabase
 from google.genai import types
 import uuid
@@ -25,7 +25,7 @@ async def marketing_chat_endpoint(request: ChatRequest):
     """Streaming endpoint for the internal Marketing Co-Pilot."""
     user_id = "marketing_team"
     session_id = f"mktg_session_{uuid.uuid4().hex[:8]}"
-    
+
     marketing_session_service = InMemorySessionService()
     await marketing_session_service.create_session(
         app_name="fermaagent", user_id=user_id, session_id=session_id
@@ -38,15 +38,20 @@ async def marketing_chat_endpoint(request: ChatRequest):
     )
 
     async def generate_marketing_stream():
-        content = types.Content(role="user", parts=[types.Part.from_text(text=request.message)])
-        logger.info(f"[bold magenta]Marketing User:[/bold magenta] [white]{request.message}[/white]")
-        logger.info("[bold cyan]Marketing Co-Pilot:[/bold cyan] [italic]Thinking...[/italic]")
-        
+        content = types.Content(
+            role="user", parts=[
+                types.Part.from_text(
+                    text=request.message)])
+        logger.info(
+            f"[bold magenta]Marketing User:[/bold magenta] [white]{request.message}[/white]")
+        logger.info(
+            "[bold cyan]Marketing Co-Pilot:[/bold cyan] [italic]Thinking...[/italic]")
+
         start_time = time.perf_counter()
         trace_steps = []
         final_reply = ""
         step_counter = 1
-        
+
         try:
             async for event in runner.run_async(user_id=user_id, session_id=session_id, new_message=content):
                 if event.content and getattr(event.content, "parts", None):
@@ -55,10 +60,13 @@ async def marketing_chat_endpoint(request: ChatRequest):
                             tool_name = part.function_call.name
                             ui_name = tool_name.replace('_', ' ').title()
                             yield f"[{ui_name}...]\n\n"
-                            
-                            logger.info(f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [yellow]Executing tool: {tool_name}[/yellow]")
-                            
-                            args = dict(part.function_call.args) if getattr(part.function_call, "args", None) else {}
+
+                            logger.info(
+                                f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [yellow]Executing tool: {tool_name}[/yellow]")
+
+                            args = dict(
+                                part.function_call.args) if getattr(
+                                part.function_call, "args", None) else {}
                             trace_steps.append({
                                 "step_number": step_counter,
                                 "type": "tool_call",
@@ -70,11 +78,12 @@ async def marketing_chat_endpoint(request: ChatRequest):
                                 "input_args": args
                             })
                             step_counter += 1
-                            
+
                         elif getattr(part, "function_response", None):
                             tool_name = part.function_response.name
-                            logger.info(f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [green]Received Tool Report: {tool_name}[/green]")
-                            
+                            logger.info(
+                                f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [green]Received Tool Report: {tool_name}[/green]")
+
                             resp_data = getattr(part.function_response, "response", {})
                             if isinstance(resp_data, dict):
                                 output_data = resp_data
@@ -82,7 +91,7 @@ async def marketing_chat_endpoint(request: ChatRequest):
                                 output_data = dict(resp_data)
                             else:
                                 output_data = {"result": str(resp_data)}
-                                
+
                             trace_steps.append({
                                 "step_number": step_counter,
                                 "type": "tool_response",
@@ -100,9 +109,10 @@ async def marketing_chat_endpoint(request: ChatRequest):
                         if part.text:
                             final_reply += part.text
                             yield part.text
-                            
-            logger.info("[bold cyan]Marketing Co-Pilot:[/bold cyan] [dim]Finished streaming response.[/dim]")
-            
+
+            logger.info(
+                "[bold cyan]Marketing Co-Pilot:[/bold cyan] [dim]Finished streaming response.[/dim]")
+
             # Persist trace
             latency = int((time.perf_counter() - start_time) * 1000)
             trace_steps.append({
@@ -117,7 +127,7 @@ async def marketing_chat_endpoint(request: ChatRequest):
                     "generated_text": final_reply[:500] + "..." if len(final_reply) > 500 else final_reply
                 }
             })
-            
+
             trace_payload = {
                 "user_id": user_id,
                 "user_prompt": request.message,
@@ -125,7 +135,7 @@ async def marketing_chat_endpoint(request: ChatRequest):
                 "total_latency_ms": latency,
                 "steps": trace_steps
             }
-            
+
             try:
                 get_supabase().table("agent_traces").insert({
                     "agent_flow": "marketing",
@@ -134,7 +144,7 @@ async def marketing_chat_endpoint(request: ChatRequest):
                 }).execute()
             except Exception as e:
                 logger.warning(f"Failed to persist Marketing trace: {e}")
-                
+
         except Exception as e:
             logger.error(f"Marketing Agent Error: {e}")
             yield f"\n[System Error]: {e}"
@@ -159,7 +169,7 @@ async def simulate_a2a_negotiation():
 def health() -> Dict[str, str]:
     """Health status endpoint."""
     return {"status": "ok", "service": "fermaagent-core-backend"}
-from app.agent.runner import execute_agent_loop, execute_b2c_stream
+
 
 @router.post("/chat")
 async def chat_interaction(req: ChatRequest):
@@ -183,7 +193,7 @@ def list_traces_for_user() -> list:
             .limit(20)
             .execute()
         )
-        
+
         # Map timestamp to created_at for frontend compatibility
         traces = []
         if res.data:
@@ -200,13 +210,14 @@ def list_traces_for_user() -> list:
         logger.error(f"Error fetching trace list: {e}")
         return []
 
+
 @router.get("/traces/{user_id}")
 def get_traces_for_user(user_id: str, trace_id: int = None) -> Dict[str, Any]:
     """Fetch the latest agent execution trace for Admin Console visualization."""
     try:
         supabase = get_supabase()
         query = supabase.table("agent_traces").select("*")
-        
+
         if trace_id:
             res = query.eq("id", trace_id).execute()
         else:
@@ -247,10 +258,11 @@ def reset_scenario() -> Dict[str, Any]:
         supabase.table("orders").update({"status": "delayed_critical"}).eq(
             "id", 4501
         ).execute()
-        
-        # Clear out agent_traces to prevent trace UI bloating/corruption during repeated demos
+
+        # Clear out agent_traces to prevent trace UI bloating/corruption during
+        # repeated demos
         supabase.table("agent_traces").delete().neq("id", 0).execute()
-        
+
         logger.info("Order #4501 reset to delayed_critical status and traces cleared")
         return {
             "status": "success",
