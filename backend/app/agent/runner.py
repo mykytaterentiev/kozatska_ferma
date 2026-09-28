@@ -350,7 +350,7 @@ async def execute_b2c_stream(user_message: str, user_id: str = "usr_101"):
                     if getattr(part, "function_call", None):
                         tool_name = part.function_call.name
                         ui_name = tool_name.replace('_', ' ').title()
-                        yield json.dumps({"type": "status", "text": f"[{ui_name}...]\n\n"}) + "\n"
+                        yield json.dumps({"type": "status", "text": f"{ui_name}..."}) + "\n"
                         
                         logger.info(f"[bold cyan]Coordinator:[/bold cyan] [yellow]Delegating to Specialist: {tool_name}[/yellow]")
                         step_counter = _process_tool_call(

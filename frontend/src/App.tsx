@@ -25,6 +25,7 @@ export function App() {
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [agentStatus, setAgentStatus] = useState('Agent reasoning...');
   const [traceTrigger, setTraceTrigger] = useState(0);
   const [focusedTraceId, setFocusedTraceId] = useState<number | undefined>();
   const [isResetting, setIsResetting] = useState(false);
@@ -57,6 +58,7 @@ export function App() {
 
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
+    setAgentStatus('Agent reasoning...');
 
     try {
       const res = await fetch('/api/chat', {
@@ -95,9 +97,11 @@ export function App() {
           if (!line) continue;
           try {
               const data = JSON.parse(line);
-              if (data.type === 'token' || data.type === 'status') {
+              if (data.type === 'token') {
                  fullText += data.text;
                  setMessages(prev => prev.map(m => m.id === agentMsgId ? { ...m, text: fullText } : m));
+              } else if (data.type === 'status') {
+                 setAgentStatus(data.text);
               } else if (data.type === 'metadata') {
                  setMessages(prev => prev.map(m => m.id === agentMsgId ? { 
                     ...m, 
@@ -205,6 +209,7 @@ export function App() {
                 messages={messages}
                 onSendMessage={handleSendMessage}
                 isLoading={isLoading}
+                agentStatus={agentStatus}
                 onSwitchToAdmin={(traceId) => {
                   setFocusedTraceId(traceId);
                   setActiveView('admin');

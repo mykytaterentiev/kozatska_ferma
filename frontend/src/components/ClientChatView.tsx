@@ -33,6 +33,7 @@ interface ClientChatViewProps {
   messages: ChatMessage[];
   onSendMessage: (message: string) => Promise<void>;
   isLoading: boolean;
+  agentStatus: string;
   onSwitchToAdmin: (traceId?: number) => void;
   activeCustomerId: string;
   onCustomerChange: (id: string) => void;
@@ -45,6 +46,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
   messages,
   onSendMessage,
   isLoading,
+  agentStatus,
   onSwitchToAdmin,
   activeCustomerId,
   onCustomerChange,
@@ -210,7 +212,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
                 <span className="w-2 h-2 rounded-full bg-brand-roasted/60 animate-bounce [animation-delay:-0.15s]"></span>
                 <span className="w-2 h-2 rounded-full bg-brand-roasted/60 animate-bounce"></span>
                 <span className="ml-2 text-xs font-sans font-bold text-brand-roasted/80">
-                  Agent reasoning...
+                  {agentStatus}
                 </span>
               </div>
             </div>
