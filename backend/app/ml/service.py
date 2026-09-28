@@ -21,9 +21,7 @@ ml_app = FastAPI(
 class ChurnPredictionRequest(BaseModel):
     """Payload for ML inference."""
 
-    support_tickets_count: int = Field(
-        ge=0, le=100, description="Support ticket count"
-    )
+    support_tickets_count: int = Field(ge=0, le=100, description="Support ticket count")
     days_since_last_order: int = Field(
         ge=0, le=365, description="Days since last order"
     )

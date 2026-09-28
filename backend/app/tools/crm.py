@@ -17,11 +17,7 @@ def check_crm(user_id: str) -> Dict[str, Any]:
 
     # Query customer profile
     cust_res = (
-        supabase.table("customers")
-        .select("*")
-        .eq("id", user_id)
-        .single()
-        .execute()
+        supabase.table("customers").select("*").eq("id", user_id).single().execute()
     )
     customer = cust_res.data or {}
 

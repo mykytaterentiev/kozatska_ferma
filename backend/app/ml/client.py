@@ -14,9 +14,7 @@ from app.ml.model import infer_churn_probability
 logger = logging.getLogger(__name__)
 
 
-def predict_churn(
-    support_tickets: int, days_since_order: int
-) -> Dict[str, Any]:
+def predict_churn(support_tickets: int, days_since_order: int) -> Dict[str, Any]:
     """Obtain churn probability from microservice or local model fallback."""
     # Attempt remote call if configured
     service_url = settings.ML_SERVICE_URL.rstrip("/")

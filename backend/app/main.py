@@ -18,7 +18,7 @@ logging.basicConfig(
     level=logging.INFO,
     format=FORMAT,
     datefmt="[%X]",
-    handlers=[RichHandler(rich_tracebacks=True, markup=True, show_path=False)]
+    handlers=[RichHandler(rich_tracebacks=True, markup=True, show_path=False)],
 )
 
 # Silence noisy third-party HTTP and internal ADK logs to keep terminal clean

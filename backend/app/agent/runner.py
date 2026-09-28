@@ -23,7 +23,7 @@ def _process_tool_call(
     part: Any,
     step_counter: int,
     current_step_start: float,
-    authentic_steps: List[Dict[str, Any]]
+    authentic_steps: List[Dict[str, Any]],
 ) -> int:
     """Extract tool call data into steps."""
     fc = part.function_call
@@ -51,9 +51,7 @@ def _process_tool_call(
 
 
 def _process_tool_response(
-    part: Any,
-    current_step_start: float,
-    authentic_steps: List[Dict[str, Any]]
+    part: Any, current_step_start: float, authentic_steps: List[Dict[str, Any]]
 ) -> None:
     """Attach tool response data to the corresponding step."""
     fr = part.function_response
@@ -112,19 +110,22 @@ async def _run_with_adk_runner(
     current_step_start = time.perf_counter()
 
     # Step 1: User Intent Parsing
-    authentic_steps.append({
-        "step_number": step_counter,
-        "type": "intent_parsing",
-        "title": "Agent Activated & Parsing Intent",
-        "status": "completed",
-        "latency_ms": 0,
-        "summary": f"User Prompt: '{user_message[:50]}...'",
-    })
+    authentic_steps.append(
+        {
+            "step_number": step_counter,
+            "type": "intent_parsing",
+            "title": "Agent Activated & Parsing Intent",
+            "status": "completed",
+            "latency_ms": 0,
+            "summary": f"User Prompt: '{user_message[:50]}...'",
+        }
+    )
     step_counter += 1
     current_step_start = time.perf_counter()
 
     logger.info(
-        f"[bold magenta]User ({user_id}):[/bold magenta] [white]{user_message}[/white]")
+        f"[bold magenta]User ({user_id}):[/bold magenta] [white]{user_message}[/white]"
+    )
     logger.info("[bold cyan]Coordinator:[/bold cyan] [italic]Thinking...[/italic]")
 
     async for event in runner.run_async(
@@ -135,7 +136,8 @@ async def _run_with_adk_runner(
                 if getattr(part, "function_call", None):
                     tool_name = part.function_call.name
                     logger.info(
-                        f"[bold cyan]Coordinator:[/bold cyan] [yellow]Delegating to Specialist: {tool_name}[/yellow]")
+                        f"[bold cyan]Coordinator:[/bold cyan] [yellow]Delegating to Specialist: {tool_name}[/yellow]"
+                    )
                     step_counter = _process_tool_call(
                         part, step_counter, current_step_start, authentic_steps
                     )
@@ -143,10 +145,9 @@ async def _run_with_adk_runner(
                 elif getattr(part, "function_response", None):
                     tool_name = part.function_response.name
                     logger.info(
-                        f"[bold cyan]Coordinator:[/bold cyan] [green]Received Specialist Report: {tool_name}[/green]")
-                    _process_tool_response(
-                        part, current_step_start, authentic_steps
+                        f"[bold cyan]Coordinator:[/bold cyan] [green]Received Specialist Report: {tool_name}[/green]"
                     )
+                    _process_tool_response(part, current_step_start, authentic_steps)
                     current_step_start = time.perf_counter()
 
         if event.is_final_response() and event.content:
@@ -156,18 +157,21 @@ async def _run_with_adk_runner(
 
     total_latency = int((time.perf_counter() - start_time) * 1000)
 
-    clean_reply = final_text.replace('\n', ' ')[:150]
+    clean_reply = final_text.replace("\n", " ")[:150]
     logger.info(
-        f"[bold cyan]Coordinator:[/bold cyan] Synthesized Response in [bold]{total_latency}ms[/bold]: [dim]{clean_reply}...[/dim]")
+        f"[bold cyan]Coordinator:[/bold cyan] Synthesized Response in [bold]{total_latency}ms[/bold]: [dim]{clean_reply}...[/dim]"
+    )
 
-    authentic_steps.append({
-        "step_number": step_counter,
-        "type": "response_generation",
-        "title": "Final Response Generation",
-        "status": "completed",
-        "latency_ms": int((time.perf_counter() - current_step_start) * 1000),
-        "summary": "Agent synthesized tools output and generated response",
-    })
+    authentic_steps.append(
+        {
+            "step_number": step_counter,
+            "type": "response_generation",
+            "title": "Final Response Generation",
+            "status": "completed",
+            "latency_ms": int((time.perf_counter() - current_step_start) * 1000),
+            "summary": "Agent synthesized tools output and generated response",
+        }
+    )
 
     if not final_text:
         raise ValueError("ADK runner finished with empty response text.")
@@ -215,23 +219,28 @@ def _persist_trace(
             existing_log = existing["trace_log"]
 
             # Re-number new steps based on existing length
-            last_step_num = existing_log["steps"][-1]["step_number"] if existing_log["steps"] else 0
+            last_step_num = (
+                existing_log["steps"][-1]["step_number"] if existing_log["steps"] else 0
+            )
             for s in steps:
                 s["step_number"] = last_step_num + 1
                 last_step_num += 1
 
             existing_log["steps"].extend(steps)
-            existing_log["total_latency_ms"] = existing_log.get(
-                "total_latency_ms", 0) + latency
+            existing_log["total_latency_ms"] = (
+                existing_log.get("total_latency_ms", 0) + latency
+            )
             existing_log["user_prompt"] = user_message
             existing_log["agent_response"] = reply
 
             update_res = (
                 supabase.table("agent_traces")
-                .update({
-                    "latency_ms": existing_log["total_latency_ms"],
-                    "trace_log": existing_log
-                })
+                .update(
+                    {
+                        "latency_ms": existing_log["total_latency_ms"],
+                        "trace_log": existing_log,
+                    }
+                )
                 .eq("id", existing["id"])
                 .execute()
             )
@@ -279,14 +288,16 @@ async def execute_agent_loop(
         logger.error(f"ADK Runner exception: {exc}")
         # Build an error trace driven by the exception instead of faking success
         latency = 0
-        steps = [{
-            "step_number": 1,
-            "type": "response_generation",
-            "title": "Agent Execution Failed",
-            "status": "error",
-            "latency_ms": latency,
-            "summary": f"System Error: {str(exc)}"
-        }]
+        steps = [
+            {
+                "step_number": 1,
+                "type": "response_generation",
+                "title": "Agent Execution Failed",
+                "status": "error",
+                "latency_ms": latency,
+                "summary": f"System Error: {str(exc)}",
+            }
+        ]
         reply = f"System Error during agent execution: {str(exc)}"
 
     order_id = _extract_order_id(steps)
@@ -299,7 +310,12 @@ async def execute_b2c_stream(user_message: str, user_id: str = "usr_101"):
     """Execute complete agent turn, stream NDJSON events, record trace in Supabase."""
     if not (settings.GOOGLE_API_KEY or settings.GOOGLE_CLOUD_PROJECT):
         logger.error("Missing authentication configuration.")
-        yield json.dumps({"type": "token", "text": "System Error: Missing authentication configuration."}) + "\n"
+        yield json.dumps(
+            {
+                "type": "token",
+                "text": "System Error: Missing authentication configuration.",
+            }
+        ) + "\n"
         return
 
     start_time = time.perf_counter()
@@ -335,14 +351,16 @@ async def execute_b2c_stream(user_message: str, user_id: str = "usr_101"):
     step_counter = 1
     current_step_start = time.perf_counter()
 
-    authentic_steps.append({
-        "step_number": step_counter,
-        "type": "intent_parsing",
-        "title": "Agent Activated & Parsing Intent",
-        "status": "completed",
-        "latency_ms": 0,
-        "summary": f"User Prompt: '{user_message[:50]}...'",
-    })
+    authentic_steps.append(
+        {
+            "step_number": step_counter,
+            "type": "intent_parsing",
+            "title": "Agent Activated & Parsing Intent",
+            "status": "completed",
+            "latency_ms": 0,
+            "summary": f"User Prompt: '{user_message[:50]}...'",
+        }
+    )
     step_counter += 1
     current_step_start = time.perf_counter()
 
@@ -354,11 +372,14 @@ async def execute_b2c_stream(user_message: str, user_id: str = "usr_101"):
                 for part in event.content.parts:
                     if getattr(part, "function_call", None):
                         tool_name = part.function_call.name
-                        ui_name = tool_name.replace('_', ' ').title()
-                        yield json.dumps({"type": "status", "text": f"{ui_name}..."}) + "\n"
+                        ui_name = tool_name.replace("_", " ").title()
+                        yield json.dumps(
+                            {"type": "status", "text": f"{ui_name}..."}
+                        ) + "\n"
 
                         logger.info(
-                            f"[bold cyan]Coordinator:[/bold cyan] [yellow]Delegating to Specialist: {tool_name}[/yellow]")
+                            f"[bold cyan]Coordinator:[/bold cyan] [yellow]Delegating to Specialist: {tool_name}[/yellow]"
+                        )
                         step_counter = _process_tool_call(
                             part, step_counter, current_step_start, authentic_steps
                         )
@@ -366,7 +387,8 @@ async def execute_b2c_stream(user_message: str, user_id: str = "usr_101"):
                     elif getattr(part, "function_response", None):
                         tool_name = part.function_response.name
                         logger.info(
-                            f"[bold cyan]Coordinator:[/bold cyan] [green]Received Specialist Report: {tool_name}[/green]")
+                            f"[bold cyan]Coordinator:[/bold cyan] [green]Received Specialist Report: {tool_name}[/green]"
+                        )
                         _process_tool_response(
                             part, current_step_start, authentic_steps
                         )
@@ -380,26 +402,28 @@ async def execute_b2c_stream(user_message: str, user_id: str = "usr_101"):
 
     except Exception as exc:
         logger.error(f"ADK Runner exception: {exc}")
-        yield json.dumps({"type": "token", "text": f"\nSystem Error: {str(exc)}"}) + "\n"
+        yield json.dumps(
+            {"type": "token", "text": f"\nSystem Error: {str(exc)}"}
+        ) + "\n"
         return
 
     total_latency = int((time.perf_counter() - start_time) * 1000)
-    authentic_steps.append({
-        "step_number": step_counter,
-        "type": "response_generation",
-        "title": "Final Response Generation",
-        "status": "completed",
-        "latency_ms": int((time.perf_counter() - current_step_start) * 1000),
-        "summary": "Agent synthesized tools output and generated response",
-    })
+    authentic_steps.append(
+        {
+            "step_number": step_counter,
+            "type": "response_generation",
+            "title": "Final Response Generation",
+            "status": "completed",
+            "latency_ms": int((time.perf_counter() - current_step_start) * 1000),
+            "summary": "Agent synthesized tools output and generated response",
+        }
+    )
 
     order_id = _extract_order_id(authentic_steps)
     trace_id = _persist_trace(
-        user_id,
-        order_id,
-        user_message,
-        final_text,
-        total_latency,
-        authentic_steps)
+        user_id, order_id, user_message, final_text, total_latency, authentic_steps
+    )
 
-    yield json.dumps({"type": "metadata", "order_id": order_id, "trace_id": trace_id}) + "\n"
+    yield json.dumps(
+        {"type": "metadata", "order_id": order_id, "trace_id": trace_id}
+    ) + "\n"

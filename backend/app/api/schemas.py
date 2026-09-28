@@ -23,6 +23,7 @@ class ChatResponse(BaseModel):
 
 class A2ATurn(BaseModel):
     """A single turn in the A2A negotiation."""
+
     speaker: str
     message: str
     tools_used: List[str] = []
@@ -30,6 +31,7 @@ class A2ATurn(BaseModel):
 
 class A2ASimulateResponse(BaseModel):
     """Response containing the complete A2A negotiation log."""
+
     status: str
     turns: List[A2ATurn]
     final_delivery: Optional[Dict[str, Any]] = None

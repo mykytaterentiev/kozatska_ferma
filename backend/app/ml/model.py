@@ -58,9 +58,7 @@ def load_churn_model(artifact_path: Path = ARTIFACT_PATH) -> RandomForestClassif
     return joblib.load(artifact_path)
 
 
-def infer_churn_probability(
-    support_tickets: int, days_since_order: int
-) -> float:
+def infer_churn_probability(support_tickets: int, days_since_order: int) -> float:
     """Predict customer churn probability given interaction metrics."""
     model = load_churn_model()
     features = np.array([[support_tickets, days_since_order]])

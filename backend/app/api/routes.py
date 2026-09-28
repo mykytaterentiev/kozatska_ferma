@@ -34,18 +34,19 @@ async def marketing_chat_endpoint(request: ChatRequest):
     runner = Runner(
         agent=marketing_agent,
         app_name="fermaagent",
-        session_service=marketing_session_service
+        session_service=marketing_session_service,
     )
 
     async def generate_marketing_stream():
         content = types.Content(
-            role="user", parts=[
-                types.Part.from_text(
-                    text=request.message)])
+            role="user", parts=[types.Part.from_text(text=request.message)]
+        )
         logger.info(
-            f"[bold magenta]Marketing User:[/bold magenta] [white]{request.message}[/white]")
+            f"[bold magenta]Marketing User:[/bold magenta] [white]{request.message}[/white]"
+        )
         logger.info(
-            "[bold cyan]Marketing Co-Pilot:[/bold cyan] [italic]Thinking...[/italic]")
+            "[bold cyan]Marketing Co-Pilot:[/bold cyan] [italic]Thinking...[/italic]"
+        )
 
         start_time = time.perf_counter()
         trace_steps = []
@@ -53,36 +54,46 @@ async def marketing_chat_endpoint(request: ChatRequest):
         step_counter = 1
 
         try:
-            async for event in runner.run_async(user_id=user_id, session_id=session_id, new_message=content):
+            async for event in runner.run_async(
+                user_id=user_id, session_id=session_id, new_message=content
+            ):
                 if event.content and getattr(event.content, "parts", None):
                     for part in event.content.parts:
                         if getattr(part, "function_call", None):
                             tool_name = part.function_call.name
-                            ui_name = tool_name.replace('_', ' ').title()
+                            ui_name = tool_name.replace("_", " ").title()
                             yield f"[{ui_name}...]\n\n"
 
                             logger.info(
-                                f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [yellow]Executing tool: {tool_name}[/yellow]")
+                                f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [yellow]Executing tool: {tool_name}[/yellow]"
+                            )
 
-                            args = dict(
-                                part.function_call.args) if getattr(
-                                part.function_call, "args", None) else {}
-                            trace_steps.append({
-                                "step_number": step_counter,
-                                "type": "tool_call",
-                                "tool_name": tool_name,
-                                "title": "Information Research",
-                                "status": "executed",
-                                "latency_ms": int((time.perf_counter() - start_time) * 1000),
-                                "summary": f"Researcher triggered {tool_name}",
-                                "input_args": args
-                            })
+                            args = (
+                                dict(part.function_call.args)
+                                if getattr(part.function_call, "args", None)
+                                else {}
+                            )
+                            trace_steps.append(
+                                {
+                                    "step_number": step_counter,
+                                    "type": "tool_call",
+                                    "tool_name": tool_name,
+                                    "title": "Information Research",
+                                    "status": "executed",
+                                    "latency_ms": int(
+                                        (time.perf_counter() - start_time) * 1000
+                                    ),
+                                    "summary": f"Researcher triggered {tool_name}",
+                                    "input_args": args,
+                                }
+                            )
                             step_counter += 1
 
                         elif getattr(part, "function_response", None):
                             tool_name = part.function_response.name
                             logger.info(
-                                f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [green]Received Tool Report: {tool_name}[/green]")
+                                f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [green]Received Tool Report: {tool_name}[/green]"
+                            )
 
                             resp_data = getattr(part.function_response, "response", {})
                             if isinstance(resp_data, dict):
@@ -92,16 +103,20 @@ async def marketing_chat_endpoint(request: ChatRequest):
                             else:
                                 output_data = {"result": str(resp_data)}
 
-                            trace_steps.append({
-                                "step_number": step_counter,
-                                "type": "tool_response",
-                                "tool_name": tool_name,
-                                "title": "Data Acquired",
-                                "status": "completed",
-                                "latency_ms": int((time.perf_counter() - start_time) * 1000),
-                                "summary": f"Ingested results from {tool_name}",
-                                "output": output_data
-                            })
+                            trace_steps.append(
+                                {
+                                    "step_number": step_counter,
+                                    "type": "tool_response",
+                                    "tool_name": tool_name,
+                                    "title": "Data Acquired",
+                                    "status": "completed",
+                                    "latency_ms": int(
+                                        (time.perf_counter() - start_time) * 1000
+                                    ),
+                                    "summary": f"Ingested results from {tool_name}",
+                                    "output": output_data,
+                                }
+                            )
                             step_counter += 1
 
                 if event.is_final_response() and event.content:
@@ -111,37 +126,46 @@ async def marketing_chat_endpoint(request: ChatRequest):
                             yield part.text
 
             logger.info(
-                "[bold cyan]Marketing Co-Pilot:[/bold cyan] [dim]Finished streaming response.[/dim]")
+                "[bold cyan]Marketing Co-Pilot:[/bold cyan] [dim]Finished streaming response.[/dim]"
+            )
 
             # Persist trace
             latency = int((time.perf_counter() - start_time) * 1000)
-            trace_steps.append({
-                "step_number": step_counter,
-                "type": "response_generation",
-                "title": "Synthesis",
-                "status": "completed",
-                "latency_ms": latency,
-                "summary": "WriterAgent generated final response",
-                "output": {
-                    "length": len(final_reply),
-                    "generated_text": final_reply[:500] + "..." if len(final_reply) > 500 else final_reply
+            trace_steps.append(
+                {
+                    "step_number": step_counter,
+                    "type": "response_generation",
+                    "title": "Synthesis",
+                    "status": "completed",
+                    "latency_ms": latency,
+                    "summary": "WriterAgent generated final response",
+                    "output": {
+                        "length": len(final_reply),
+                        "generated_text": (
+                            final_reply[:500] + "..."
+                            if len(final_reply) > 500
+                            else final_reply
+                        ),
+                    },
                 }
-            })
+            )
 
             trace_payload = {
                 "user_id": user_id,
                 "user_prompt": request.message,
                 "agent_response": final_reply,
                 "total_latency_ms": latency,
-                "steps": trace_steps
+                "steps": trace_steps,
             }
 
             try:
-                get_supabase().table("agent_traces").insert({
-                    "agent_flow": "marketing",
-                    "latency_ms": latency,
-                    "trace_log": trace_payload
-                }).execute()
+                get_supabase().table("agent_traces").insert(
+                    {
+                        "agent_flow": "marketing",
+                        "latency_ms": latency,
+                        "trace_log": trace_payload,
+                    }
+                ).execute()
             except Exception as e:
                 logger.warning(f"Failed to persist Marketing trace: {e}")
 
@@ -157,8 +181,7 @@ async def simulate_a2a_negotiation():
     """Run the dynamic LLM vs LLM A2A negotiation and stream the results in real-time."""
     try:
         return StreamingResponse(
-            stream_a2a_negotiation(),
-            media_type="application/x-ndjson"
+            stream_a2a_negotiation(), media_type="application/x-ndjson"
         )
     except Exception as exc:
         logger.error(f"A2A streaming failed: {exc}")
@@ -177,7 +200,7 @@ async def chat_interaction(req: ChatRequest):
     user_id = req.user_id or "usr_101"
     return StreamingResponse(
         execute_b2c_stream(user_message=req.message, user_id=user_id),
-        media_type="application/x-ndjson"
+        media_type="application/x-ndjson",
     )
 
 
@@ -198,13 +221,15 @@ def list_traces_for_user() -> list:
         traces = []
         if res.data:
             for row in res.data:
-                traces.append({
-                    "id": row.get("id"),
-                    "order_id": row.get("order_id"),
-                    "user_id": row.get("user_id", "Unknown"),
-                    "agent_flow": row.get("agent_flow", "b2c"),
-                    "created_at": row.get("timestamp")
-                })
+                traces.append(
+                    {
+                        "id": row.get("id"),
+                        "order_id": row.get("order_id"),
+                        "user_id": row.get("user_id", "Unknown"),
+                        "agent_flow": row.get("agent_flow", "b2c"),
+                        "created_at": row.get("timestamp"),
+                    }
+                )
         return traces
     except Exception as e:
         logger.error(f"Error fetching trace list: {e}")

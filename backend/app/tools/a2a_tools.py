@@ -9,10 +9,12 @@ def check_inventory(search_term: str = "") -> Dict[str, Any]:
     try:
         supabase = get_supabase()
         query = supabase.table("inventory").select("*")
-        
+
         if search_term:
-            query = query.or_(f"name.ilike.%{search_term}%,category.ilike.%{search_term}%")
-            
+            query = query.or_(
+                f"name.ilike.%{search_term}%,category.ilike.%{search_term}%"
+            )
+
         res = query.execute()
         return {"items": res.data}
     except Exception as e:
@@ -63,9 +65,7 @@ def dispatch_delivery(
             "target_lat": lat,
             "target_lon": lon,
         }
-        delivery_res = (
-            supabase.table("deliveries").insert(delivery_data).execute()
-        )
+        delivery_res = supabase.table("deliveries").insert(delivery_data).execute()
 
         return {
             "status": "success",

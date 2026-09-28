@@ -38,11 +38,7 @@ def check_crm(user_id: str) -> Dict[str, Any]:
     """
     client = get_supabase_client()
     cust_res = (
-        client.table("customers")
-        .select("*")
-        .eq("id", user_id)
-        .single()
-        .execute()
+        client.table("customers").select("*").eq("id", user_id).single().execute()
     )
     customer = cust_res.data or {}
 
