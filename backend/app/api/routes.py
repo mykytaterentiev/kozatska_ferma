@@ -53,6 +53,9 @@ async def marketing_chat_endpoint(request: ChatRequest):
                     for part in event.content.parts:
                         if getattr(part, "function_call", None):
                             tool_name = part.function_call.name
+                            ui_name = tool_name.replace('_', ' ').title()
+                            yield f"[{ui_name}...]\n\n"
+                            
                             logger.info(f"[bold cyan]Marketing Co-Pilot:[/bold cyan] [yellow]Executing tool: {tool_name}[/yellow]")
                             
                             args = dict(part.function_call.args) if getattr(part.function_call, "args", None) else {}
@@ -156,30 +159,15 @@ async def simulate_a2a_negotiation():
 def health() -> Dict[str, str]:
     """Health status endpoint."""
     return {"status": "ok", "service": "fermaagent-core-backend"}
+from app.agent.runner import execute_agent_loop, execute_b2c_stream
 
-
-@router.post("/chat", response_model=ChatResponse)
-async def chat_interaction(req: ChatRequest) -> ChatResponse:
-    """Run autonomous ADK crisis resolution loop, record trace, and return reply."""
+@router.post("/chat")
+async def chat_interaction(req: ChatRequest):
+    """Run autonomous ADK crisis resolution loop, stream NDJSON events."""
     user_id = req.user_id or "usr_101"
-
-    try:
-        reply_text, order_id, latency, trace_id = await execute_agent_loop(
-            user_message=req.message,
-            user_id=user_id,
-        )
-    except Exception as exc:
-        logger.error(f"Autonomous agent turn failed: {exc}")
-        raise HTTPException(
-            status_code=500, detail=f"Autonomous agent turn failed: {exc}"
-        )
-
-    return ChatResponse(
-        reply=reply_text,
-        order_id=order_id,
-        user_id=user_id,
-        total_latency_ms=latency,
-        trace_id=trace_id,
+    return StreamingResponse(
+        execute_b2c_stream(user_message=req.message, user_id=user_id),
+        media_type="application/x-ndjson"
     )
 
 

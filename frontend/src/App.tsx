@@ -66,28 +66,59 @@ export function App() {
       });
 
       if (!res.ok) throw new Error(`Server returned status ${res.status}`);
-      const data = await res.json();
+      if (!res.body) throw new Error('No body in response');
 
-      const agentMsg: ChatMessage = {
-        id: `agent-${Date.now()}`,
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      
+      const agentMsgId = `agent-${Date.now()}`;
+      setMessages((prev) => [...prev, {
+        id: agentMsgId,
         sender: 'agent',
-        text: data.reply,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        orderId: data.order_id,
-        refunded: data.reply.includes('FERMA-RECOVER-20') || data.reply.includes('FERMA-VIP-30'),
-        voucher: data.reply.includes('FERMA-VIP-30') 
-                  ? 'FERMA-VIP-30' 
-                  : data.reply.includes('FERMA-RECOVER-20') 
-                    ? 'FERMA-RECOVER-20' 
-                    : data.reply.includes('FERMA-CARE-5')
-                      ? 'FERMA-CARE-5'
-                      : undefined,
-        traceId: data.trace_id,
-      };
+        text: '',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
 
-      setMessages((prev) => [...prev, agentMsg]);
-      // Trigger trace panel update
-      setTraceTrigger((n) => n + 1);
+      let fullText = '';
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        
+        let boundary = buffer.indexOf('\n');
+        while (boundary !== -1) {
+          const line = buffer.slice(0, boundary).trim();
+          buffer = buffer.slice(boundary + 1);
+          boundary = buffer.indexOf('\n');
+
+          if (!line) continue;
+          try {
+              const data = JSON.parse(line);
+              if (data.type === 'token' || data.type === 'status') {
+                 fullText += data.text;
+                 setMessages(prev => prev.map(m => m.id === agentMsgId ? { ...m, text: fullText } : m));
+              } else if (data.type === 'metadata') {
+                 setMessages(prev => prev.map(m => m.id === agentMsgId ? { 
+                    ...m, 
+                    orderId: data.order_id, 
+                    traceId: data.trace_id,
+                    refunded: fullText.includes('FERMA-RECOVER-20') || fullText.includes('FERMA-VIP-30'),
+                    voucher: fullText.includes('FERMA-VIP-30') 
+                              ? 'FERMA-VIP-30' 
+                              : fullText.includes('FERMA-RECOVER-20') 
+                                ? 'FERMA-RECOVER-20' 
+                                : fullText.includes('FERMA-CARE-5')
+                                  ? 'FERMA-CARE-5'
+                                  : undefined
+                 } : m));
+                 setTraceTrigger(n => n + 1);
+              }
+           } catch (e) {
+              console.warn('Failed to parse NDJSON line', line);
+           }
+        }
+      }
     } catch (err: any) {
       console.error('Chat error:', err);
       const customer = CUSTOMERS.find(c => c.id === activeCustomerId) || CUSTOMERS[0];

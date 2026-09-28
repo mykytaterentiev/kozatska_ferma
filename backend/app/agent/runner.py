@@ -288,3 +288,105 @@ async def execute_agent_loop(
     trace_id = _persist_trace(user_id, order_id, user_message, reply, latency, steps)
 
     return reply, order_id, latency, trace_id
+import json
+
+async def execute_b2c_stream(user_message: str, user_id: str = "usr_101"):
+    """Execute complete agent turn, stream NDJSON events, record trace in Supabase."""
+    if not (settings.GOOGLE_API_KEY or settings.GOOGLE_CLOUD_PROJECT):
+        logger.error("Missing authentication configuration.")
+        yield json.dumps({"type": "token", "text": "System Error: Missing authentication configuration."}) + "\n"
+        return
+
+    start_time = time.perf_counter()
+    session_id = f"adk_session_{user_id}"
+
+    try:
+        session = await global_session_service.get_session(
+            app_name="fermaagent", user_id=user_id, session_id=session_id
+        )
+        if not session:
+            await global_session_service.create_session(
+                app_name="fermaagent", user_id=user_id, session_id=session_id
+            )
+    except Exception as e:
+        logger.warning(f"Session retrieval error: {e}")
+        await global_session_service.create_session(
+            app_name="fermaagent", user_id=user_id, session_id=session_id
+        )
+
+    runner = Runner(
+        agent=root_agent,
+        app_name="fermaagent",
+        session_service=global_session_service,
+    )
+
+    contextual_message = f"[System Context: The current customer speaking to you has user_id='{user_id}']\n\n{user_message}"
+    content = types.Content(
+        role="user", parts=[types.Part.from_text(text=contextual_message)]
+    )
+
+    final_text = ""
+    authentic_steps = []
+    step_counter = 1
+    current_step_start = time.perf_counter()
+
+    authentic_steps.append({
+        "step_number": step_counter,
+        "type": "intent_parsing",
+        "title": "Agent Activated & Parsing Intent",
+        "status": "completed",
+        "latency_ms": 0,
+        "summary": f"User Prompt: '{user_message[:50]}...'",
+    })
+    step_counter += 1
+    current_step_start = time.perf_counter()
+
+    try:
+        async for event in runner.run_async(
+            user_id=user_id, session_id=session_id, new_message=content
+        ):
+            if event.content and getattr(event.content, "parts", None):
+                for part in event.content.parts:
+                    if getattr(part, "function_call", None):
+                        tool_name = part.function_call.name
+                        ui_name = tool_name.replace('_', ' ').title()
+                        yield json.dumps({"type": "status", "text": f"[{ui_name}...]\n\n"}) + "\n"
+                        
+                        logger.info(f"[bold cyan]Coordinator:[/bold cyan] [yellow]Delegating to Specialist: {tool_name}[/yellow]")
+                        step_counter = _process_tool_call(
+                            part, step_counter, current_step_start, authentic_steps
+                        )
+                        current_step_start = time.perf_counter()
+                    elif getattr(part, "function_response", None):
+                        tool_name = part.function_response.name
+                        logger.info(f"[bold cyan]Coordinator:[/bold cyan] [green]Received Specialist Report: {tool_name}[/green]")
+                        _process_tool_response(
+                            part, current_step_start, authentic_steps
+                        )
+                        current_step_start = time.perf_counter()
+
+            if event.is_final_response() and event.content:
+                for part in event.content.parts or []:
+                    if part.text:
+                        final_text += part.text
+                        yield json.dumps({"type": "token", "text": part.text}) + "\n"
+                        
+    except Exception as exc:
+        logger.error(f"ADK Runner exception: {exc}")
+        yield json.dumps({"type": "token", "text": f"\nSystem Error: {str(exc)}"}) + "\n"
+        return
+
+    total_latency = int((time.perf_counter() - start_time) * 1000)
+    authentic_steps.append({
+        "step_number": step_counter,
+        "type": "response_generation",
+        "title": "Final Response Generation",
+        "status": "completed",
+        "latency_ms": int((time.perf_counter() - current_step_start) * 1000),
+        "summary": "Agent synthesized tools output and generated response",
+    })
+
+    order_id = _extract_order_id(authentic_steps)
+    trace_id = _persist_trace(user_id, order_id, user_message, final_text, total_latency, authentic_steps)
+
+    yield json.dumps({"type": "metadata", "order_id": order_id, "trace_id": trace_id}) + "\n"
