@@ -155,9 +155,9 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
                   )}
 
                   <div
-                    className={`px-5 py-3.5 text-sm leading-relaxed shadow-sm font-sans font-medium transition-all ${
+                    className={`px-5 py-3.5 text-sm leading-relaxed shadow-sm font-sans font-medium transition-all flex-shrink-0 z-10 relative ${
                       isUser
-                        ? 'bg-brand-green text-white rounded-2xl rounded-tr-sm'
+                        ? 'bg-brand-roasted text-brand-kraft rounded-2xl rounded-tr-sm'
                         : 'bg-white text-brand-roasted border border-brand-border/60 rounded-2xl rounded-tl-sm'
                     }`}
                   >
@@ -192,7 +192,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
                   </div>
 
                   {isUser && (
-                    <div className="w-8 h-8 rounded-full bg-brand-green flex items-center justify-center text-white border border-brand-green/20 shadow-sm shrink-0 mb-1">
+                    <div className="w-8 h-8 rounded-full bg-brand-roasted flex items-center justify-center text-brand-kraft border border-brand-roasted/20 shadow-sm shrink-0 mb-1">
                       <User className="w-4 h-4" />
                     </div>
                   )}
