@@ -247,10 +247,14 @@ def reset_scenario() -> Dict[str, Any]:
         supabase.table("orders").update({"status": "delayed_critical"}).eq(
             "id", 4501
         ).execute()
-        logger.info("Order #4501 reset to delayed_critical status")
+        
+        # Clear out agent_traces to prevent trace UI bloating/corruption during repeated demos
+        supabase.table("agent_traces").delete().neq("id", 0).execute()
+        
+        logger.info("Order #4501 reset to delayed_critical status and traces cleared")
         return {
             "status": "success",
-            "message": "Order #4501 reset to delayed_critical status",
+            "message": "Scenario reset successfully.",
         }
     except Exception as exc:
         logger.error(f"Failed to reset scenario: {exc}")
