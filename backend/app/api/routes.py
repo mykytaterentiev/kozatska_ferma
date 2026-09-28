@@ -277,11 +277,11 @@ def get_traces_for_user(user_id: str, trace_id: int = None) -> Dict[str, Any]:
 
 @router.post("/reset")
 def reset_scenario() -> Dict[str, Any]:
-    """Reset Order #4501 to 'delayed_critical' for repeated lecture demonstrations."""
+    """Reset Orders #4501 and #4503 to 'delayed_critical' for repeated lecture demonstrations."""
     try:
         supabase = get_supabase()
-        supabase.table("orders").update({"status": "delayed_critical"}).eq(
-            "id", 4501
+        supabase.table("orders").update({"status": "delayed_critical"}).in_(
+            "id", [4501, 4503]
         ).execute()
 
         # Clear out agent_traces to prevent trace UI bloating/corruption during
