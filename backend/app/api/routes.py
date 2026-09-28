@@ -1,6 +1,6 @@
 """FastAPI route handlers for chat, tracing, and demo management."""
 
-from app.agent.runner import execute_b2c_stream
+from app.agent.runner import execute_b2c_stream, global_session_service
 import time
 import logging
 from typing import Any, Dict
@@ -288,7 +288,11 @@ def reset_scenario() -> Dict[str, Any]:
         # repeated demos
         supabase.table("agent_traces").delete().neq("id", 0).execute()
 
-        logger.info("Order #4501 reset to delayed_critical status and traces cleared")
+        # Wipe ADK LLM memory so the agent doesn't suffer from memory hallucination
+        # (thinking it already resolved the issue on the previous demo run)
+        global_session_service.sessions.clear()
+
+        logger.info("Order #4501 reset to delayed_critical status, traces cleared, and LLM memory wiped.")
         return {
             "status": "success",
             "message": "Scenario reset successfully.",
