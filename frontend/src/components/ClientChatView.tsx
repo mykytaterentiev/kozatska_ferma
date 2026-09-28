@@ -138,6 +138,10 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
           {/* Message bubbles */}
           {messages.map((msg) => {
             const isUser = msg.sender === 'user';
+            
+            // Prevent rendering an empty bubble before the stream delivers the first text token
+            if (!isUser && !msg.text) return null;
+
             return (
               <div
                 key={msg.id}
@@ -202,7 +206,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
           })}
 
           {/* Realistic typing indicator */}
-          {isLoading && (
+          {isLoading && (!messages.length || messages[messages.length - 1].sender === 'user' || !messages[messages.length - 1].text) && (
             <div className="flex items-end space-x-2">
               <div className="w-8 h-8 rounded-full overflow-hidden border border-brand-border shadow-sm shrink-0 mb-1">
                   <img src="/ferma_logo.jpg" alt="KF" className="w-full h-full object-cover" />
