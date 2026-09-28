@@ -1,4 +1,5 @@
 """A2A Negotiation engine."""
+
 import time
 import uuid
 import logging
@@ -38,21 +39,27 @@ async def stream_a2a_negotiation() -> AsyncGenerator[str, None]:
     )
 
     trace_steps = []
-    
+
     human_turn = {
         "speaker": "Ivan Z. (Human User)",
-        "message": '"I am hosting a BBQ for 8 people on Saturday. Get me a premium meat and cheese platter from Kozatska Ferma. Keep it under 3,000 UAH. Deliver it to Zaporizhzhia (47.8388, 35.1396)."',
-        "tools_used": []
+        "message": '"I am hosting a BBQ for 8 people on Saturday. Get me a premium meat and cheese platter '
+        'from Kozatska Ferma. Keep it under 3,000 UAH. Deliver it to Zaporizhzhia (47.8388, 35.1396)."',
+        "tools_used": [],
     }
-    trace_steps.append({"agent": human_turn["speaker"], "function_call": "", "action": human_turn["message"]})
-    
-    logger.info(f"[bold magenta]User (Ivan Z.):[/bold magenta] [white]{human_turn['message']}[/white]")
-    
+    trace_steps.append(
+        {
+            "agent": human_turn["speaker"],
+            "function_call": "",
+            "action": human_turn["message"],
+        }
+    )
+
+    logger.info(
+        f"[bold magenta]User (Ivan Z.):[/bold magenta] [white]{human_turn['message']}[/white]"
+    )
+
     # Instantly yield the initial human command context
-    yield json.dumps({
-        "type": "turn",
-        "turn": human_turn
-    }) + "\n"
+    yield json.dumps({"type": "turn", "turn": human_turn}) + "\n"
 
     current_message = "INITIATE NEGOTIATION."
     active_role = "Consumer Agent"
@@ -77,7 +84,9 @@ async def stream_a2a_negotiation() -> AsyncGenerator[str, None]:
         turn_start_time = time.perf_counter()
 
         try:
-            logger.info(f"[bold cyan][{active_role}][/bold cyan] [italic]Thinking...[/italic]")
+            logger.info(
+                f"[bold cyan][{active_role}][/bold cyan] [italic]Thinking...[/italic]"
+            )
             async for event in runner.run_async(
                 user_id=user_id, session_id=session_id, new_message=content
             ):
@@ -85,24 +94,34 @@ async def stream_a2a_negotiation() -> AsyncGenerator[str, None]:
                     for part in event.content.parts:
                         if getattr(part, "function_call", None):
                             tools_used.append(part.function_call.name)
-                            logger.info(f"[bold cyan][{active_role}][/bold cyan] [yellow]Executing tool: {part.function_call.name}[/yellow]")
+                            logger.info(
+                                f"[bold cyan][{active_role}][/bold cyan] [yellow]Executing tool: {
+                                    part.function_call.name}[/yellow]"
+                            )
 
                         func_resp = getattr(part, "function_response", None)
                         if func_resp:
-                            logger.info(f"[bold cyan][{active_role}][/bold cyan] [green]Received Tool Report: {func_resp.name}[/green]")
+                            logger.info(
+                                f"[bold cyan][{active_role}][/bold cyan] [green]Received Tool Report: {func_resp.name}[/green]"
+                            )
                             if func_resp.name == "dispatch_delivery":
                                 if hasattr(func_resp.response, "items"):
                                     final_delivery = dict(func_resp.response)
-                                    logger.info(f"[bold cyan][{active_role}][/bold cyan] [green]Tool dispatch_delivery successful: {final_delivery.get('delivery_id')}[/green]")
+                                    logger.info(
+                                        f"[bold cyan][{active_role}][/bold cyan] [green]Tool dispatch_delivery successful: {
+                                            final_delivery.get('delivery_id')}[/green]"
+                                    )
 
                 if event.is_final_response() and event.content:
                     for part in event.content.parts or []:
                         if part.text:
                             reply_text += part.text
-            
+
             turn_latency = int((time.perf_counter() - turn_start_time) * 1000)
-            clean_reply = reply_text.replace('\n', ' ')[:120]
-            logger.info(f"[bold cyan][{active_role}][/bold cyan] Synthesized Response in [bold]{turn_latency}ms[/bold]: [dim]{clean_reply}...[/dim]")
+            clean_reply = reply_text.replace("\n", " ")[:120]
+            logger.info(
+                f"[bold cyan][{active_role}][/bold cyan] Synthesized Response in [bold]{turn_latency}ms[/bold]: [dim]{clean_reply}...[/dim]"
+            )
         except Exception as e:
             logger.error(f"Error during {active_role} turn: {e}")
             error_turn = {
@@ -110,11 +129,14 @@ async def stream_a2a_negotiation() -> AsyncGenerator[str, None]:
                 "message": f"SYSTEM ERROR: {e}",
                 "tools_used": tools_used,
             }
-            trace_steps.append({"agent": error_turn["speaker"], "function_call": ",".join(tools_used), "action": error_turn["message"]})
-            yield json.dumps({
-                "type": "turn",
-                "turn": error_turn
-            }) + "\n"
+            trace_steps.append(
+                {
+                    "agent": error_turn["speaker"],
+                    "function_call": ",".join(tools_used),
+                    "action": error_turn["message"],
+                }
+            )
+            yield json.dumps({"type": "turn", "turn": error_turn}) + "\n"
             break
 
         turn_data = {
@@ -122,13 +144,16 @@ async def stream_a2a_negotiation() -> AsyncGenerator[str, None]:
             "message": reply_text,
             "tools_used": tools_used,
         }
-        trace_steps.append({"agent": turn_data["speaker"], "function_call": ",".join(tools_used), "action": turn_data["message"]})
-        
+        trace_steps.append(
+            {
+                "agent": turn_data["speaker"],
+                "function_call": ",".join(tools_used),
+                "action": turn_data["message"],
+            }
+        )
+
         # Yield the completed agent turn
-        yield json.dumps({
-            "type": "turn",
-            "turn": turn_data
-        }) + "\n"
+        yield json.dumps({"type": "turn", "turn": turn_data}) + "\n"
 
         if "ACCEPT" in reply_text.upper() and final_delivery is not None:
             break
@@ -138,37 +163,35 @@ async def stream_a2a_negotiation() -> AsyncGenerator[str, None]:
 
         current_message = reply_text
         active_role = (
-            "Storefront Agent"
-            if active_role == "Consumer Agent"
-            else "Consumer Agent"
+            "Storefront Agent" if active_role == "Consumer Agent" else "Consumer Agent"
         )
 
     latency = int((time.perf_counter() - start_time) * 1000)
-    
+
     # Save trace to Supabase
     try:
         supabase = get_supabase()
         order_id = final_delivery.get("order_id") if final_delivery else 4501
-        
+
         trace_payload = {
             "user_id": "a2a_demo",
             "agent_response": "A2A Negotiation Concluded",
             "total_latency_ms": latency,
             "steps": trace_steps,
         }
-        
-        supabase.table("agent_traces").insert({
-            "order_id": order_id,
-            "agent_flow": "a2a",
-            "latency_ms": latency,
-            "trace_log": trace_payload,
-        }).execute()
+
+        supabase.table("agent_traces").insert(
+            {
+                "order_id": order_id,
+                "agent_flow": "a2a",
+                "latency_ms": latency,
+                "trace_log": trace_payload,
+            }
+        ).execute()
     except Exception as exc:
         logger.warning(f"Failed to persist A2A trace: {exc}")
 
     # Yield the final delivery data payload
-    yield json.dumps({
-        "type": "final",
-        "delivery": final_delivery or {},
-        "latency_ms": latency
-    }) + "\n"
+    yield json.dumps(
+        {"type": "final", "delivery": final_delivery or {}, "latency_ms": latency}
+    ) + "\n"

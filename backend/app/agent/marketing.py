@@ -1,4 +1,5 @@
 """Marketing Co-Pilot agent definition for Kozatska Ferma."""
+
 from datetime import datetime
 
 from google.adk.agents import LoopAgent, LlmAgent, SequentialAgent
@@ -18,10 +19,12 @@ def complete_research(tool_context: ToolContext):
 
 def initialize_research_state(callback_context: CallbackContext):
     """Ensure state variables exist before the pipeline starts to prevent context variable errors."""
-    if 'research_data' not in callback_context.state:
-        callback_context.state['research_data'] = "No research gathered yet."
-    if 'research_criticism' not in callback_context.state:
-        callback_context.state['research_criticism'] = "Initial run. Please gather basic facts."
+    if "research_data" not in callback_context.state:
+        callback_context.state["research_data"] = "No research gathered yet."
+    if "research_criticism" not in callback_context.state:
+        callback_context.state["research_criticism"] = (
+            "Initial run. Please gather basic facts."
+        )
 
 
 _current_date = datetime.now().strftime("%B %d, %Y")
@@ -31,10 +34,12 @@ _current_year = datetime.now().year
 researcher_agent = LlmAgent(
     name="ResearcherAgent",
     model=_base_model,
-    instruction=f"""You are a researcher for the marketing department. Your task is to gather as much real-world data as possible to answer the user's request.
+    instruction=f"""You are a researcher for the marketing department. Your task is to gather as
+    much real-world data as possible to answer the user's request.
 
     IMPORTANT CONTEXT:
-    Today's date is {_current_date}. You MUST use the current year ({_current_year}) in any web search queries to get up-to-date information.
+    Today's date is {_current_date}. You MUST use the current year ({_current_year}) in any web
+    search queries to get up-to-date information.
 
     PREVIOUS DATA:
     {{research_data}}
@@ -44,13 +49,12 @@ researcher_agent = LlmAgent(
 
     TASK:
     Use the tools `search_web`, `analyze_market_trends`, and `check_inventory` to find the necessary information.
-    After using the tools, output an UPDATED and COMPLETE report with all gathered facts (merging previous data with new data). Do not invent anything, use only facts from the tools.
+    After using the tools, output an UPDATED and COMPLETE report with all gathered facts (merging previous data with new data).
+    Do not invent anything, use only facts from the tools.
     """,
-    tools=[
-        search_web,
-        analyze_market_trends,
-        check_inventory],
-    output_key="research_data")
+    tools=[search_web, analyze_market_trends, check_inventory],
+    output_key="research_data",
+)
 
 # 2. Assessor: Checks if info is sufficient to break the loop
 assessor_agent = LlmAgent(
@@ -71,13 +75,12 @@ assessor_agent = LlmAgent(
     Write a SHORT critique/guidance for the ResearcherAgent explaining exactly what else they need to find on the internet or in the database.
     """,
     tools=[complete_research],
-    output_key="research_criticism")
+    output_key="research_criticism",
+)
 
 # 3. The Loop Agent wrapper
 research_loop = LoopAgent(
-    name="ResearchLoop",
-    sub_agents=[researcher_agent, assessor_agent],
-    max_iterations=4
+    name="ResearchLoop", sub_agents=[researcher_agent, assessor_agent], max_iterations=4
 )
 
 # 4. Final Writer: Generates the actual UI response
@@ -104,5 +107,5 @@ marketing_agent = SequentialAgent(
     name="marketing_copilot",
     description="Iterative research and writing pipeline using a LoopAgent.",
     sub_agents=[research_loop, writer_agent],
-    before_agent_callback=initialize_research_state
+    before_agent_callback=initialize_research_state,
 )

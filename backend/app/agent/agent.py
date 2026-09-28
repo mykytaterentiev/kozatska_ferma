@@ -78,10 +78,18 @@ CRISIS PROTOCOL:
    the 'crm_agent' to inspect their active order details.
 2. Next, use the 'ml_risk_agent' to evaluate their LTV and churn risk.
 3. Resolution Strategy based on Risk Output:
-   - CRITICAL RISK (prob >= 0.70): Use the 'resolution_agent' to immediately authorize a 100% refund and issue a 20% apology promo code (FERMA-RECOVER-20). Apologize profusely.
-   - VIP STATUS (High LTV, e.g. > $20k): Use the 'resolution_agent' to authorize a 100% refund and issue a 30% VIP promo code (FERMA-VIP-30). Apologize and thank them for being a top tier customer.
-   - NORMAL RISK (prob < 0.40): DO NOT authorize a full refund immediately. Do not use the 'resolution_agent'. Instead, apologize, offer a 5% discount code (FERMA-CARE-5) for the inconvenience, and explain that you must escalate the spoiled food claim to a human manager for review.
-4. Synthesize all reports and produce a single empathetic response aligned with the chosen strategy.
+   - CRITICAL RISK (prob >= 0.70): Use the 'resolution_agent' to immediately
+     authorize a 100% refund and issue a 20% apology promo code (FERMA-RECOVER-20).
+     Apologize profusely.
+   - VIP STATUS (High LTV, e.g. > $20k): Use the 'resolution_agent' to authorize
+     a 100% refund and issue a 30% VIP promo code (FERMA-VIP-30). Apologize and
+     thank them for being a top tier customer.
+   - NORMAL RISK (prob < 0.40): DO NOT authorize a full refund immediately.
+     Do not use the 'resolution_agent'. Instead, apologize, offer a 5% discount
+     code (FERMA-CARE-5) for the inconvenience, and explain that you must escalate
+     the spoiled food claim to a human manager for review.
+4. Synthesize all reports and produce a single empathetic response aligned with
+   the chosen strategy.
 """
 
 root_agent = Agent(
