@@ -56,6 +56,32 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
 
   const activeCustomer = CUSTOMERS.find((c) => c.id === activeCustomerId) || CUSTOMERS[0];
 
+  // --- DIAGNOSTIC LOGGING ---
+  useEffect(() => {
+    const mainWrapper = document.getElementById('b2c-main-wrapper');
+    const scrollArea = document.getElementById('b2c-scroll-area');
+    
+    console.group('[UI Diagnostic] Background Color Tracker');
+    console.log('Timestamp:', new Date().toISOString());
+    console.log('isLoading:', isLoading);
+    console.log('agentStatus:', agentStatus);
+    
+    if (mainWrapper) {
+      console.log('Main Wrapper Computed BG:', window.getComputedStyle(mainWrapper).backgroundColor);
+    }
+    if (scrollArea) {
+      console.log('Scroll Area Computed BG:', window.getComputedStyle(scrollArea).backgroundColor);
+    }
+    
+    // Also check if any parent elements have dynamic theme classes
+    console.log('Body Classes:', document.body.className);
+    const rootEl = document.getElementById('root');
+    if (rootEl) console.log('Root Classes:', rootEl.className);
+    
+    console.groupEnd();
+  });
+  // -------------------------
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
@@ -73,9 +99,9 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto my-6 bg-white rounded-3xl shadow-[0_12px_48px_rgba(92,74,66,0.12)] border border-brand-border/60 overflow-hidden flex flex-col h-[calc(100vh-140px)]">
+    <div id="b2c-main-wrapper" className="max-w-3xl mx-auto my-6 bg-transparent rounded-3xl shadow-[0_12px_48px_rgba(92,74,66,0.12)] border border-brand-border/60 overflow-hidden flex flex-col h-[calc(100vh-140px)]">
       {/* Persona Selector Bar */}
-      <div className="bg-brand-kraftDark/20 px-6 py-2 border-b border-brand-border flex items-center justify-between z-10 text-xs">
+      <div className="bg-brand-kraftDark/20 px-6 py-2 border-b border-brand-border flex items-center justify-between z-10 text-xs flex-shrink-0 relative">
         <span className="font-bold text-brand-roasted/70 uppercase tracking-widest flex items-center space-x-2">
           <User className="w-3.5 h-3.5" />
           <span>Demo Persona</span>
@@ -94,7 +120,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
       </div>
 
       {/* Soft Chat Header */}
-      <div className="bg-white/90 backdrop-blur-md px-6 py-4 border-b border-brand-border flex items-center justify-between z-10">
+      <div className="bg-transparent backdrop-blur-md px-6 py-4 border-b border-brand-border flex items-center justify-between z-10 flex-shrink-0 relative">
         <div className="flex items-center space-x-3">
           <div className="relative">
             <div className="w-11 h-11 rounded-full overflow-hidden border border-brand-border shadow-sm">
@@ -120,9 +146,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-brand-kraft relative">
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjMDAwIiBmaWxsLW9wYWNpdHk9IjEiLz4KPHBhdGggZD0iTTAgMEw4IDhaTTAgOEw4IDBaIiBzdHJva2U9IiMwMDAiIHN0cm9rZS1vcGFjaXR5PSIwLjAyIiBzdHJva2Utd2lkdGg9IjEiLz4KPC9zdmc+')]"></div>
-
+      <div id="b2c-scroll-area" className="flex-1 p-6 overflow-y-auto space-y-4 bg-transparent relative">
         <div className="relative z-10 space-y-4">
           {/* Intro context card */}
           <div className="bg-orange-50 border border-orange-200 p-4 rounded-2xl flex items-start space-x-3 text-orange-950 text-xs shadow-sm">
@@ -157,7 +181,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
                   <div
                     className={`px-5 py-3.5 text-sm leading-relaxed shadow-sm font-sans font-medium transition-all ${
                       isUser
-                        ? 'bg-brand-green text-white rounded-2xl rounded-tr-sm'
+                        ? 'bg-brand-roasted text-brand-kraft rounded-2xl rounded-tr-sm'
                         : 'bg-white text-brand-roasted border border-brand-border/60 rounded-2xl rounded-tl-sm'
                     }`}
                   >
@@ -192,7 +216,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
                   </div>
 
                   {isUser && (
-                    <div className="w-8 h-8 rounded-full bg-brand-green flex items-center justify-center text-white border border-brand-green/20 shadow-sm shrink-0 mb-1">
+                    <div className="w-8 h-8 rounded-full bg-brand-roasted flex items-center justify-center text-brand-kraft border border-brand-roasted/20 shadow-sm shrink-0 mb-1">
                       <User className="w-4 h-4" />
                     </div>
                   )}
@@ -227,7 +251,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
       </div>
 
       {/* Input area & Quick Preset Bar */}
-      <div className="p-4 bg-white border-t border-brand-border z-10 rounded-b-3xl">
+      <div className="p-4 bg-transparent border-t border-brand-border z-10 rounded-b-3xl flex-shrink-0 relative">
         {/* Preset quick button for live university demonstration */}
         <div className="mb-3 flex items-center justify-between">
           <button
@@ -251,7 +275,7 @@ export const ClientChatView: FC<ClientChatViewProps> = ({
             onChange={(e) => setInput(e.target.value)}
             placeholder="Write your message..."
             disabled={isLoading}
-            className="flex-1 bg-brand-kraft text-brand-roasted font-sans font-medium px-4 py-3 rounded-2xl border border-brand-border focus:border-brand-green focus:ring-1 focus:ring-brand-green/20 focus:outline-none placeholder:text-brand-roasted/50 transition-all shadow-sm"
+            className="flex-1 bg-white text-brand-roasted font-sans font-medium px-4 py-3 rounded-2xl border border-brand-border focus:border-brand-green focus:ring-1 focus:ring-brand-green/20 focus:outline-none placeholder:text-brand-roasted/50 transition-all shadow-sm"
           />
 
           <button

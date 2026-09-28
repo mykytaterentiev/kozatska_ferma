@@ -19,6 +19,8 @@ export const MarketingCopilot: React.FC = () => {
     e.preventDefault();
     if (!prompt.trim() || loading) return;
 
+    const currentPrompt = prompt;
+    setPrompt('');
     setLoading(true);
     setResponse('');
     
@@ -26,7 +28,7 @@ export const MarketingCopilot: React.FC = () => {
       const res = await fetch('/api/marketing/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: prompt, user_id: 'marketer' })
+        body: JSON.stringify({ message: currentPrompt, user_id: 'marketer' })
       });
       
       if (!res.body) return;
@@ -44,7 +46,6 @@ export const MarketingCopilot: React.FC = () => {
       setResponse(prev => prev + '\n\n[Connection Error]');
     } finally {
       setLoading(false);
-      setPrompt('');
     }
   };
 
