@@ -1,48 +1,51 @@
 # Kozatska Ferma: Autonomous Agent Live Demo (FermaAgent)
 
-FermaAgent is a highly resilient, true multi-agent application built to showcase autonomous AI capabilities using the **Google Agent Development Kit (ADK)** and **Gemini 3.1 Flash-Lite**.
+FermaAgent is a highly resilient, true multi-agent application built to showcase autonomous AI capabilities using the **Google Agent Development Kit (ADK)** and the **Gemini API**.
 
-This project simulates a premium artisanal food marketplace ("Kozatska Ferma"). It is specifically designed as a live-demo application for academic and technical lectures, demonstrating three advanced AI paradigms:
+This project simulates a premium artisanal food marketplace ("Kozatska Ferma"). It is specifically designed as a live-demo application for academic and technical lectures, demonstrating advanced AI paradigms through three main interfaces:
 1. **B2C Support:** A swarm of specialized agents handling a complex customer crisis end-to-end without human intervention. Features a dynamic persona switcher to test different ML risk thresholds (Ivan, Olena, Taras).
 2. **A2A Commerce:** Two independent LLMs (a Consumer Agent and a B2B Storefront Agent) autonomously negotiating price, checking inventory, and dispatching logistics in real-time.
-3. **Internal Marketing Copilot:** An English-first internal agent designed to help the Ferma team research global market trends using live web search capabilities.
+3. **Internal Marketing Copilot:** An English-first internal agent designed to help the Ferma team craft campaigns using a dedicated text stream.
 
-## Key Features
+## Core Architecture & Tech Stack
 
-*   **Real-Time A2A Negotiation:** Watch two AI agents autonomously haggle over price and inventory constraints. The backend streams the LLM inference back to the frontend in true real-time using an NDJSON (Newline Delimited JSON) Server-Sent Events stream.
-*   **Cinematic Map Storytelling:** The A2A dashboard features a reactive React-Leaflet map that fetches actual street geometries via the public **OSRM API**. As the agents negotiate, the camera flies to the coordinates, draws dashed logistical projections, and dispatches a vehicle upon deal confirmation.
-*   **Strict Multi-Agent Hierarchy:** Uses Google ADK's `AgentTool` to enforce a strict delegation structure. A Root Coordinator routes tasks to specialized sub-agents (CRM, ML Risk, Resolution).
-*   **Dynamic Admin Trace UI:** Agent reasoning, tool latency, and SQL executions are streamed and persisted directly to a Supabase database. The React frontend dynamically parses sub-agent responses to render color-coded ML risk badges (Green, Gold, Red) based on actual Scikit-Learn output.
-*   **Decoupled ML Microservice:** Churn prediction is handled by a separate FastAPI service running a scikit-learn Random Forest model, reflecting real-world microservice architectures.
+*   **Frontend:** React 18, Vite, Tailwind CSS, TypeScript.
+*   **Backend:** FastAPI, Python 3.11+, Google Agent Development Kit (ADK).
+*   **Database:** Supabase (PostgreSQL) with strict Row Level Security (RLS).
+*   **ML Microservice:** Scikit-Learn (Random Forest) running on a separate FastAPI instance.
 
-## The Agent Swarm
+## Technical Implementation Details & Constraints
 
-### Crisis Support (B2C)
-1.  **`ferma_crisis_coordinator`:** The brain of the operation. Parses the initial user intent and coordinates the specialists.
-2.  **`crm_agent`:** Fetches customer profiles and active order details from Supabase.
-3.  **`ml_risk_agent`:** Calls the external ML microservice to evaluate the customer's churn probability.
-4.  **`resolution_agent`:** Executes database refunds and generates promo codes if churn risk is critical or the user is a VIP.
+This project was built adhering to strict architectural constraints to ensure a flawless, hallucination-free live demo experience.
 
-### Autonomous Commerce (A2A)
-1.  **`consumer_agent`:** Acts on behalf of the buyer. Given strict budget and coordinate constraints, it attempts to secure the best deal.
-2.  **`storefront_agent`:** The B2B seller. Equipped with tools to `check_inventory`, verify `check_loyalty_tier` for discounts, and `dispatch_delivery` to finalize the sale.
+### 1. Memory Management & Context Injection
+*   **No Database Bloat:** Conversational memory is preserved across multi-turn API requests utilizing a globally instantiated `InMemorySessionService`. We do not store raw LLM conversational arrays in the database.
+*   **Context Safety:** The current `user_id` and the current date (e.g., Year 2026) are dynamically injected into the Agent's system prompt to prevent temporal or persona hallucinations.
+*   **Hard Reset:** Demo reset logic (`/api/reset`) explicitly flushes the `InMemorySessionService` and wipes the Supabase trace tables to prevent LLM context bleed between demo runs.
 
-### Internal Ops (Marketing)
-1.  **`marketing_agent`:** An internal copilot equipped with a `search_web` tool to pull real-time market data, competitor analysis, and craft email campaigns.
+### 2. Multi-Agent Hierarchy (ADK)
+*   **Strict Delegation:** Uses Google ADK's `AgentTool`, `LoopAgent`, and `SequentialAgent` to enforce a rigid delegation structure. A Root Coordinator routes tasks to specialized sub-agents.
+*   **Resolution Strategy:** The `resolution_agent` strictly follows programmatic tiers:
+    *   **Critical Risk (>0.70):** Full refund + 20% discount (`FERMA-RECOVER-20`).
+    *   **VIP (LTV > $20k):** Full refund + 30% discount (`FERMA-VIP-30`).
+    *   **Normal (<0.40):** No refund, escalate to human, 5% apology discount (`FERMA-CARE-5`).
+*   **Marketing Co-Pilot:** Operates entirely in English, acting as an internal staff assistant.
 
-## Project Structure
+### 3. Traceability & Database Security
+*   **Unified DB Traces:** Database traces are unified via SQL `UPDATE` operations, appending new conversational steps and tool executions to the most recent user trace document.
+*   **Agent Flow Segmentation:** The `agent_traces` table uses an `agent_flow` column (TEXT) to segment B2C, A2A, and Marketing runs. JSONB extraction (`trace_log->>user_id`) is used for querying.
+*   **Strict RLS:** All Supabase tables (`users`, `orders`, `agent_traces`) have `ENABLE ROW LEVEL SECURITY` strictly enforced. 
 
-*   `/backend/app/agent/`: Core Google ADK agent definitions, runners, and the A2A NDJSON streaming engine.
-*   `/backend/app/api/`: FastAPI route handlers (`/api/chat`, `/api/traces`, `/api/a2a/simulate`).
-*   `/backend/app/tools/`: Python functions that the LLMs invoke to interact with Supabase and ML models.
-*   `/backend/app/ml/`: Standalone Random Forest churn prediction microservice.
-*   `/frontend/`: Vite + React + Tailwind frontend featuring the B2C storefront, Admin Trace Panel, and A2A cinematic map.
-*   `/backend/scripts/`: Database seeding and ML training scripts.
+### 4. UI/UX: The "Labor Illusion" & Styling
+*   **Labor Illusion UX:** We do not hide background agent work. The backend executes an NDJSON (Newline Delimited JSON) stream that traps `function_call` events, streaming tool executions to dynamically replace the standard "typing..." indicator in the UI.
+*   **Anti-Flicker Streaming:** To prevent "double-bubble" artifacts, the user input state is cleared synchronously *before* awaiting the stream reader, and empty agent messages are suppressed until text generation actually begins.
+*   **Strict Tailwind Tokens:** The UI utilizes high-accessibility contrast tokens (`bg-brand-roasted`, `text-brand-kraft`). Hardcoded hex colors were eradicated to fix global background shifting anomalies, utilizing transparent wrappers to inherit a unified global SVG noise texture overlay (`#F3F0EB` equivalent).
+*   **Flexbox Constraints:** Fixed UI headers and footers utilize `flex-shrink-0 relative` to prevent CSS flexbox clipping and horizontal overflow in chat containers.
 
 ## Local Setup
 
 **1. Database (Supabase):**
-Ensure your Supabase project is active and run the seed script to populate the demo inventory and users:
+Ensure your Supabase project is active, apply the schema (`backend/schema.sql`), and run the seed script:
 ```bash
 cd backend
 poetry install
@@ -53,9 +56,9 @@ poetry run python scripts/seed_demo.py
 Create a `.env` in the `backend/` directory:
 ```env
 SUPABASE_URL=your-supabase-url
-SUPABASE_KEY=your-supabase-key
-GOOGLE_API_KEY=your-ai-studio-key
-GEMINI_MODEL=gemini-3.1-flash-lite
+SUPABASE_KEY=your-supabase-service-role-key
+GOOGLE_API_KEY=your-google-ai-key
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 **3. Running the Stack:**
@@ -72,21 +75,15 @@ cd frontend && npm run dev
 
 ## Production Deployment
 
-The architecture is heavily decoupled and optimized for modern serverless and PaaS platforms. 
+### Backend (Railway)
+1. Set **Root Directory** to `/backend`.
+2. Add environment variables.
+3. Railway natively supports Poetry via the included `Procfile`.
 
-### Deploying Backend to Railway
-Railway natively supports Python Poetry projects out of the box via the included `Procfile`.
-1. Connect your GitHub repository in Railway.
-2. In the project settings, set the **Root Directory** to `/backend`.
-3. Add your environment variables (Supabase and Google keys).
-4. Generate a public domain under Networking (e.g., `ferma-backend.up.railway.app`).
-
-### Deploying Frontend to Vercel
-The frontend includes a `vercel.json` file designed to seamlessly proxy `/api` calls directly to your backend, preventing CORS issues.
-1. Edit `frontend/vercel.json` and replace `<YOUR_RAILWAY_URL>` with your actual Railway domain.
-2. Connect your GitHub repository in Vercel.
-3. Set the **Root Directory** to `frontend`.
-4. Vercel will auto-detect Vite and deploy instantly.
+### Frontend (Vercel)
+1. Set **Root Directory** to `frontend`.
+2. Edit `frontend/vercel.json` and replace the `<YOUR_RAILWAY_URL>` proxy destination with your live backend domain.
+3. Deploy via Vite preset.
 
 ---
 *Built for the Kozatska Ferma Live Demo.*
